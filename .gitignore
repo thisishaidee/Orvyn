@@ -1,0 +1,27 @@
+# Secrets: never commit these
+.env
+.env.*
+!.env.example
+.circle/
+recovery_file*
+
+# Dependencies and build output
+node_modules/
+dist/
+contracts/out/
+contracts/cache/
+cache/
+
+# Foundry dry-run records
+broadcast/**/dry-run/
+
+# Logs
+*.log
+*.jsonl
+
+# Local deploy records
+broadcast/
+.agents/
+
+# Local-only notes (kept out of the public repo)
+docs/agentpay-audit-report.md
