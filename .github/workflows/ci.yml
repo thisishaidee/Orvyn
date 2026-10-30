@@ -1,0 +1,43 @@
+
+name: AgentPay CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, studio-sync]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: agentpay-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contracts:
+    name: Build and test smart contracts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: v1.7.1
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build contracts
+        run: forge build
+
+      - name: Run contract tests
+        run: forge test -vvv
+        
