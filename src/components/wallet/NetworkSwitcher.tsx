@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useSwitchChain, useChainId, useAccount } from 'wagmi'
+import { useSwitchChain, useAccount } from 'wagmi'
 import { arc, arcTestnet } from 'viem/chains'
 import { Button } from '@/components/ui'
 import { isSupportedChain } from '@/config'
@@ -25,8 +25,7 @@ function describeSwitchError(error: Error): string {
  * when it is not yet configured (EIP-3085 / error 4902).
  */
 export function NetworkSwitcher() {
-  const { isConnected } = useAccount()
-  const chainId = useChainId()
+  const { isConnected, chainId } = useAccount()
   const network = useNetworkInfo()
   const { switchChain, isPending, error, reset } = useSwitchChain()
 
