@@ -1,0 +1,108 @@
+import { useState } from 'react'
+import { isAddress, parseUnits, type Address } from 'viem'
+import { toast } from 'sonner'
+import { Button, Field, Input, Modal, Notice, Select } from '@/components/ui'
+import { useAgentPayTransactions } from '@/lib/agentpay-transactions'
+
+const periods = [
+  { label: 'Hourly', value: '3600' },
+  { label: 'Daily', value: '86400' },
+  { label: 'Weekly', value: '604800' },
+  { label: 'Every 30 days', value: '2592000' },
+]
+
+export function CreateLeaseModal({ open, onClose, onCreated }: {
+  open: boolean
+  onClose: () => void
+  onCreated: () => void
+}) {
+  const tx = useAgentPayTransactions()
+  const [delegate, setDelegate] = useState('')
+  const [cap, setCap] = useState('')
+  const [period, setPeriod] = useState('86400')
+  const [expiry, setExpiry] = useState('')
+  const [allowlist, setAllowlist] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+
+  const reset = () => {
+    setDelegate('')
+    setCap('')
+    setPeriod('86400')
+    setExpiry('')
+    setAllowlist(false)
+    setError('')
+  }
+  const close = () => {
+    if (busy) return
+    reset()
+    onClose()
+  }
+
+  const submit = async () => {
+    setError('')
+    if (!isAddress(delegate.trim())) return setError('Enter a valid EVM wallet address.')
+    if (!/^\d+(\.\d{1,6})?$/.test(cap)) return setError('Enter a positive USDC cap with up to six decimal places.')
+    const capUnits = parseUnits(cap, 6)
+    if (capUnits <= 0n) return setError('The spending cap must be greater than zero.')
+    const expirySeconds = Math.floor(new Date(expiry).getTime() / 1000)
+    if (!Number.isFinite(expirySeconds) || expirySeconds <= Math.floor(Date.now() / 1000)) {
+      return setError('Choose an expiry date and time in the future.')
+    }
+    if (tx.state !== 'ready') return setError(tx.reason || 'Transactions are not available.')
+    setBusy(true)
+    try {
+      const result = await tx.createLease({
+        delegate: delegate.trim() as Address,
+        cap: capUnits,
+        periodSeconds: BigInt(period),
+        expiry: BigInt(expirySeconds),
+        allowlistEnabled: allowlist,
+        initialDeposit: 0n,
+      })
+      toast.success('Lease created', { description: result.hash })
+      reset()
+      onCreated()
+      onClose()
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : 'Lease creation failed.'
+      setError(message)
+      toast.error('Lease creation failed', { description: message })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <Modal open={open} onClose={close} dismissible={!busy} size="md"
+      title="Create a lease"
+      description="Define the agent, spending cap, period and expiry. This creates an unfunded lease.">
+      <div className="space-y-4">
+        {tx.state !== 'ready' && <Notice tone="warning" title="Transactions unavailable">{tx.reason || 'Connect a wallet and configure a deployed AgentPay address.'}</Notice>}
+        <Field label="Agent wallet address">
+          {(props) => <Input {...props} value={delegate} onChange={(e) => setDelegate(e.target.value)} placeholder="0x…" spellCheck={false} autoCapitalize="none" />}
+        </Field>
+        <Field label="Spending cap per period" hint="USDC, up to six decimal places.">
+          {(props) => <Input {...props} type="number" min="0.000001" step="0.000001" value={cap} onChange={(e) => setCap(e.target.value)} placeholder="100.00" />}
+        </Field>
+        <Field label="Spending period">
+          {(props) => <Select {...props} value={period} onChange={(e) => setPeriod(e.target.value)}>
+            {periods.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+          </Select>}
+        </Field>
+        <Field label="Lease expiry">
+          {(props) => <Input {...props} type="datetime-local" value={expiry} onChange={(e) => setExpiry(e.target.value)} />}
+        </Field>
+        <label className="flex items-start gap-3 rounded-card border border-line p-3 text-body">
+          <input type="checkbox" checked={allowlist} onChange={(e) => setAllowlist(e.target.checked)} className="mt-1 size-4" />
+          <span><strong className="font-medium">Restrict recipients</strong><span className="mt-0.5 block text-support text-ink-soft">Only recipients you approve later can receive payments.</span></span>
+        </label>
+        {error && <Notice tone="danger" title="Could not create lease">{error}</Notice>}
+        <div className="flex justify-end gap-2 border-t border-line pt-4">
+          <Button variant="secondary" onClick={close} disabled={busy}>Cancel</Button>
+          <Button onClick={() => void submit()} loading={busy} disabled={tx.state !== 'ready'}>Create lease</Button>
+        </div>
+      </div>
+    </Modal>
+  )
+}
