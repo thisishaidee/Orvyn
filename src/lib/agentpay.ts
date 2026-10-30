@@ -83,7 +83,7 @@ export interface DataSource<T> {
   reason: string
 }
 
-export { useOwnerLeases as useLeases, useOwnerActivityQuery as useActivity } from '@/lib/agentpay-reads'
+export { useOwnerLeases as useLeases, useOwnerActivityQuery as useActivity, useDelegateLeases } from '@/lib/agentpay-reads'
 
 /** What the deployed contract can do today. `inApp` flips to true as each action is wired up. */
 export const CONTRACT_ACTIONS = [
