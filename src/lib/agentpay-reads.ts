@@ -221,7 +221,7 @@ export function useOwnerLeases(): DataSource<Lease> {
     enabled: gate.ok,
     queryFn: () => {
       if (!gate.ok) return []
-      return discoverLeases(gate.client, gate.contract, gate.address)
+      return discoverLeases(gate.client, gate.contract, { owner: gate.address })
     },
   })
 
