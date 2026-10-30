@@ -46,6 +46,7 @@ export function LeaseDetail({ lease }: { lease?: Lease }) {
   const remaining = lease && status ? remainingAllowance(lease, status) : undefined
   const [action, setAction] = useState<'deposit' | 'recipient' | null>(null)
   const [amount, setAmount] = useState('')
+  const [approvedAmount, setApprovedAmount] = useState<bigint>(0n)
   const [recipient, setRecipient] = useState('')
   const [allowed, setAllowed] = useState('true')
   const [busy, setBusy] = useState(false)
@@ -55,23 +56,30 @@ export function LeaseDetail({ lease }: { lease?: Lease }) {
 
   const closeAction = () => {
     if (busy) return
-    setAction(null); setAmount(''); setRecipient(''); setAllowed('true'); setError('')
+    setAction(null); setAmount(''); setApprovedAmount(0n); setRecipient(''); setAllowed('true'); setError('')
+  }
+  const depositUnits = /^\d+(\.\d{1,6})?$/.test(amount) ? parseUnits(amount || '0', 6) : 0n
+  const approveDeposit = async () => {
+    setError('')
+    if (depositUnits <= 0n) { setError('Enter a positive USDC amount with up to six decimal places.'); return }
+    setBusy(true)
+    try {
+      const result = await tx.approveUsdc(depositUnits)
+      setApprovedAmount(depositUnits)
+      toast.success('USDC approval confirmed', { description: result.hash })
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : 'The approval failed.'
+      setError(message); toast.error('USDC approval failed', { description: message })
+    } finally { setBusy(false) }
   }
   const submitDeposit = async () => {
     if (!lease) return
     setError('')
-    if (!/^\d+(\.\d{1,6})?$/.test(amount) || parseUnits(amount || '0', 6) <= 0n) {
-      setError('Enter a positive USDC amount with up to six decimal places.'); return
-    }
-    const units = parseUnits(amount, 6)
+    if (depositUnits <= 0n) { setError('Enter a positive USDC amount with up to six decimal places.'); return }
+    if (approvedAmount < depositUnits) { setError('Approve this exact deposit amount first, then confirm the deposit separately.'); return }
     setBusy(true)
     try {
-      const allowance = await tx.getUsdcAllowance()
-      if (allowance < units) {
-        await tx.approveUsdc(units)
-        toast.success('USDC approval confirmed', { description: 'Now confirm the separate lease deposit transaction.' })
-      }
-      const result = await tx.deposit(BigInt(lease.id), units)
+      const result = await tx.deposit(BigInt(lease.id), depositUnits)
       toast.success('Lease funded', { description: result.hash })
       closeAction()
     } catch (cause) {
@@ -151,7 +159,8 @@ export function LeaseDetail({ lease }: { lease?: Lease }) {
           {error && <Notice tone="danger" title="Deposit not completed">{error}</Notice>}
           <div className="flex justify-end gap-2 border-t border-line pt-4">
             <Button variant="secondary" disabled={busy} onClick={closeAction}>Cancel</Button>
-            <Button loading={busy} disabled={tx.state !== 'ready'} onClick={() => void submitDeposit()}>Continue</Button>
+            <Button variant="secondary" loading={busy} disabled={tx.state !== 'ready' || depositUnits <= 0n || approvedAmount >= depositUnits} onClick={() => void approveDeposit()}>Approve USDC</Button>
+            <Button loading={busy} disabled={tx.state !== 'ready' || depositUnits <= 0n || approvedAmount < depositUnits} onClick={() => void submitDeposit()}>Deposit funds</Button>
           </div>
         </div>
       </Modal>
