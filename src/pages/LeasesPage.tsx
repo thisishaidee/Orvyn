@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { KeyRound, Plus } from 'lucide-react'
-import { Button, Card, CardHeader, DataTable, PageHeader, ProgressBar, StatusBadge, type Column } from '@/components/ui'
+import { toast } from 'sonner'
+import { Button, Card, CardHeader, ConfirmDialog, DataTable, PageHeader, ProgressBar, StatusBadge, type Column } from '@/components/ui'
 import { LeaseDetail } from '@/components/agentpay/LeaseDetail'
 import { CreateLeaseModal } from '@/components/agentpay/CreateLeaseModal'
 import { NotConnectedNotice, PendingAction } from '@/components/agentpay/Notices'
@@ -16,6 +17,7 @@ import {
   type LeaseStatus,
 } from '@/lib/agentpay'
 import { cn } from '@/lib/cn'
+import { useAgentPayTransactions } from '@/lib/agentpay-transactions'
 
 type Filter = 'all' | LeaseStatus
 const FILTERS: { id: Filter; label: string }[] = [
@@ -30,6 +32,9 @@ export function LeasesPage() {
   const [filter, setFilter] = useState<Filter>('all')
   const [selectedId, setSelectedId] = useState<string | undefined>()
   const [createOpen, setCreateOpen] = useState(false)
+  const [revokeTarget, setRevokeTarget] = useState<Lease | undefined>()
+  const [revoking, setRevoking] = useState(false)
+  const transactions = useAgentPayTransactions()
 
   const withStatus = useMemo(() => source.items.map((lease) => ({ lease, status: leaseStatus(lease) })), [source.items])
   const rows = withStatus.filter((r) => filter === 'all' || r.status === filter)
@@ -75,9 +80,9 @@ export function LeasesPage() {
           <Button size="sm" variant="secondary" onClick={() => setSelectedId(lease.id)}>
             View
           </Button>
-          <PendingAction size="sm" variant="destructive">
+          <Button size="sm" variant="destructive" disabled={transactions.state !== 'ready' || leaseStatus(lease) !== 'active'} onClick={() => setRevokeTarget(lease)}>
             Revoke
-          </PendingAction>
+          </Button>
         </span>
       ),
     },
@@ -95,6 +100,26 @@ export function LeasesPage() {
       />
       <NotConnectedNotice subject="Leases" />
       <CreateLeaseModal open={createOpen} onClose={() => setCreateOpen(false)} onCreated={() => setSelectedId(undefined)} />
+      <ConfirmDialog
+        open={Boolean(revokeTarget)}
+        title="Revoke this lease?"
+        description="The agent will no longer be able to spend from this lease. This action cannot be undone."
+        confirmLabel="Revoke lease"
+        tone="destructive"
+        loading={revoking}
+        onCancel={() => { if (!revoking) setRevokeTarget(undefined) }}
+        onConfirm={() => {
+          if (!revokeTarget || revoking) return
+          setRevoking(true)
+          void transactions.revoke(BigInt(revokeTarget.id)).then((result) => {
+            toast.success('Lease revoked', { description: result.hash })
+            setRevokeTarget(undefined)
+          }).catch((cause) => {
+            const message = cause instanceof Error ? cause.message : 'The revoke transaction failed.'
+            toast.error('Could not revoke lease', { description: message })
+          }).finally(() => setRevoking(false))
+        }}
+      />
 
       <Card padding="none">
         <div className="flex flex-col gap-3 p-4 pb-0 sm:p-5 sm:pb-0 lg:p-6 lg:pb-0">
