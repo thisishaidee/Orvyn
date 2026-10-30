@@ -60,11 +60,11 @@ export function OverviewPage({ onNavigate }: { onNavigate: (page: PageId) => voi
           <InfoRow label="Network" hint={isConnected ? network.label : undefined}>
             {isConnected ? <Badge tone={network.supported ? 'success' : 'warning'}>{network.supported ? 'Supported' : 'Not supported'}</Badge> : <Badge tone="neutral">Waiting for wallet</Badge>}
           </InfoRow>
-          <InfoRow label="Contract connection" hint="No contract address is configured in this app yet.">
-            <Badge tone="warning">Not configured</Badge>
+          <InfoRow label="Contract connection" hint={contractConfigured ? `Configured for ${network.label}.` : agentPayAddressEnvVar(network.chainId) ? `Set ${agentPayAddressEnvVar(network.chainId)} after deployment.` : 'Select an Arc network and configure its deployed contract address.'}>
+            <Badge tone={contractConfigured ? 'success' : 'warning'}>{contractConfigured ? 'Address configured' : 'Not configured'}</Badge>
           </InfoRow>
-          <InfoRow label="Leases, agents and activity" hint="Shown once the contract connection exists.">
-            <Badge tone="neutral">Not connected</Badge>
+          <InfoRow label="Leases, agents and activity" hint="Read from the configured contract when your wallet is on the matching Arc network.">
+            <Badge tone={contractConfigured && isConnected && network.supported ? 'success' : 'neutral'}>{contractConfigured && isConnected && network.supported ? 'Ready to read' : 'Waiting for setup'}</Badge>
           </InfoRow>
         </InfoList>
       </Card>
