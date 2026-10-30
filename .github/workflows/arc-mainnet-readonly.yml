@@ -1,0 +1,67 @@
+name: Arc Mainnet Read-only Preflight
+
+on:
+  push:
+    branches:
+      - arc-mainnet-readonly-check
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Query Arc mainnet (read-only)
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const rpc = 'https://arc.nodely.dev';
+            const usdc = '0x3600000000000000000000000000000000000000';
+
+            async function rpcCall(method, params = []) {
+              const response = await fetch(rpc, {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
+                signal: AbortSignal.timeout(15000)
+              });
+              if (!response.ok) throw new Error(`${method}: HTTP ${response.status}`);
+              const body = await response.json();
+              if (body.error) throw new Error(`${method}: ${JSON.stringify(body.error)}`);
+              if (body.result === undefined) throw new Error(`${method}: missing result`);
+              return body.result;
+            }
+
+            const [chainIdHex, gasPriceHex, code, decimalsHex] = await Promise.all([
+              rpcCall('eth_chainId'),
+              rpcCall('eth_gasPrice'),
+              rpcCall('eth_getCode', [usdc, 'latest']),
+              rpcCall('eth_call', [{ to: usdc, data: '0x313ce567' }, 'latest'])
+            ]);
+
+            const chainId = Number(BigInt(chainIdHex));
+            const gasPriceWei = BigInt(gasPriceHex);
+            const decimals = Number(BigInt(decimalsHex));
+            const hasCode = typeof code === 'string' && code !== '0x' && code !== '0x0';
+
+            core.info(`RPC endpoint: ${rpc}`);
+            core.info(`Chain ID: ${chainId} (${chainIdHex})`);
+            core.info(`Gas price: ${gasPriceWei.toString()} wei (${Number(gasPriceWei) / 1e9} gwei)`);
+            core.info(`USDC address: ${usdc}`);
+            core.info(`USDC bytecode present: ${hasCode}`);
+            core.info(`USDC decimals: ${decimals}`);
+
+            const failures = [];
+            if (chainId !== 5042) failures.push(`Expected chain ID 5042, got ${chainId}`);
+            if (gasPriceWei < 20000000000n) failures.push('Gas price is below the expected 20 gwei minimum maxFeePerGas');
+            if (!hasCode) failures.push('USDC address returned empty bytecode');
+            if (decimals !== 6) failures.push(`Expected USDC decimals 6, got ${decimals}`);
+
+            if (failures.length) {
+              core.setFailed(failures.join('; '));
+            } else {
+              core.info('All Arc mainnet read-only preflight checks passed.');
+            }
