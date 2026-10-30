@@ -7,6 +7,7 @@ import { BRAND } from '@/lib/brand'
 import { walletConnectEnabled } from '@/config'
 import { shortAddress } from '@/lib/agentpay'
 import { useNetworkInfo } from '@/lib/wallet'
+import { getAgentPayAddress, agentPayAddressEnvVar } from '@/lib/agentpay-address'
 
 function Section({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
   return (
@@ -38,6 +39,8 @@ export function SettingsPage() {
   const { address, isConnected, connector } = useAccount()
   const network = useNetworkInfo()
   const chains = useChains()
+  const contractAddress = getAgentPayAddress(network.chainId)
+  const contractConfigured = Boolean(contractAddress)
 
   return (
     <div className="space-y-6 md:space-y-8">
@@ -84,7 +87,7 @@ export function SettingsPage() {
             <Fact ok>Spending rules are enforced by the AgentPay contract, not by this website.</Fact>
             <Fact ok>The contract has no administrator, pause switch or upgrade path. Each lease is controlled by the wallet that created it.</Fact>
             <Fact ok={false}>An independent security audit of the contract has not been completed.</Fact>
-            <Fact ok={false}>This app is not connected to the contract yet, so it cannot create, revoke or spend from a lease.</Fact>
+            <Fact ok={contractConfigured}> {contractConfigured ? 'A contract address is configured for the selected Arc network. Contract reads and wallet-signed actions are available when connected.' : 'No AgentPay address is configured for the selected Arc network; contract reads and transactions remain unavailable.'}</Fact>
           </ul>
         </Section>
       </div>
@@ -94,7 +97,7 @@ export function SettingsPage() {
           <InfoRow label="Product">{BRAND.name}</InfoRow>
           <InfoRow label="Purpose">{BRAND.tagline}</InfoRow>
           <InfoRow label="Stage">Prototype. The product name is temporary.</InfoRow>
-          <InfoRow label="Contract">Not connected. No contract address is configured in this app.</InfoRow>
+          <InfoRow label="Contract">{contractAddress ? <span className="num font-mono text-support" title={contractAddress}>{shortAddress(contractAddress)}</span> : <>Not configured{agentPayAddressEnvVar(network.chainId) ? ` · set ${agentPayAddressEnvVar(network.chainId)} after deployment` : ''}</>}</InfoRow>
           <InfoRow label="Wallet connections">
             Browser wallets, Coinbase Wallet{walletConnectEnabled ? ', WalletConnect' : ' (WalletConnect not configured)'}
           </InfoRow>
