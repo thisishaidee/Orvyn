@@ -57,7 +57,7 @@ export interface ActivityItem {
   id: string
   type: ActivityType
   leaseId: string
-  agent: Address
+  agent?: Address
   recipient?: Address
   /** USDC base units (6 decimals). */
   amount?: bigint

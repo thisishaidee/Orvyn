@@ -19,7 +19,7 @@ const columns: Column<ActivityItem>[] = [
     header: 'Agent / lease',
     cell: (a) => (
       <span className="flex flex-col">
-        <span className="num font-mono text-support" title={a.agent}>{shortAddress(a.agent)}</span>
+        <span className="num font-mono text-support" title={a.agent}>{a.agent ? shortAddress(a.agent) : '—'}</span>
         <span className="text-support text-ink-soft">Lease {a.leaseId}</span>
       </span>
     ),

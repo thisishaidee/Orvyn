@@ -11,9 +11,8 @@ import { isSupportedChain } from '@/config'
 import { agentPayAbi } from '@/lib/agentpay-abi'
 import { agentPayAddressEnvVar, getAgentPayAddress } from '@/lib/agentpay-address'
 import type { ActivityItem, ActivityType, DataSource, Lease } from '@/lib/agentpay'
-
-const CHUNK = 20_000n
-const MAX_CHUNKS = 200
+import { activityAgent, currentPeriodSpent } from '@/lib/agentpay-accounting'
+import { getLogsChunked } from '@/lib/agentpay-logs'
 
 export type ReadGate =
   | { ok: false; state: 'disconnected' | 'unsupported-network' | 'missing-address'; reason: string }
@@ -46,37 +45,6 @@ export function useReadGate(): ReadGate {
   return { ok: true, address, chainId, contract, client }
 }
 
-type LogQuery = {
-  address: Address
-  event: (typeof agentPayAbi)[number]
-  args?: Record<string, unknown>
-}
-
-async function getLogsChunked(client: PublicClient, params: LogQuery) {
-  const call = (fromBlock: bigint, toBlock: bigint | 'latest') =>
-    client.getLogs({ ...params, fromBlock, toBlock } as never)
-
-  try {
-    return await call(0n, 'latest')
-  } catch {
-    // Fall back to block-range pagination when the RPC rejects a full-range query.
-  }
-
-  const latest = await client.getBlockNumber()
-  const logs: Awaited<ReturnType<typeof call>> = []
-  let from = 0n
-  let chunks = 0
-  while (from <= latest && chunks < MAX_CHUNKS) {
-    const to = from + CHUNK - 1n > latest ? latest : from + CHUNK - 1n
-    const batch = await call(from, to)
-    logs.push(...batch)
-    if (to === latest) break
-    from = to + 1n
-    chunks += 1
-  }
-  return logs
-}
-
 async function blockTimestamps(client: PublicClient, blocks: bigint[]): Promise<Map<string, number>> {
   const unique = [...new Set(blocks.map((b) => b.toString()))]
   const map = new Map<string, number>()
@@ -101,7 +69,7 @@ type LeaseTuple = readonly [
   Address, Address, bigint, bigint, bigint, bigint, bigint, bigint, bigint, boolean, boolean,
 ]
 
-function toLease(id: bigint, row: LeaseTuple, remaining: bigint, allowed: Address[]): Lease {
+function toLease(id: bigint, row: LeaseTuple, remaining: bigint, allowed: Address[], nowSeconds: bigint): Lease {
   return {
     id: id.toString(),
     owner: row[0],
@@ -109,7 +77,13 @@ function toLease(id: bigint, row: LeaseTuple, remaining: bigint, allowed: Addres
     cap: row[2],
     periodSeconds: Number(row[3]),
     expiry: Number(row[4]),
-    spentThisPeriod: row[7],
+    spentThisPeriod: currentPeriodSpent({
+      nowSeconds,
+      windowStart: row[5],
+      periodSeconds: row[3],
+      lastWindowIndex: row[6],
+      spentThisWindow: row[7],
+    }),
     balance: row[8],
     allowlistEnabled: row[9],
     revoked: row[10],
@@ -140,7 +114,7 @@ async function discoverLeases(client: PublicClient, contract: Address, owner: Ad
       inputs: agentPayAbi.find((x) => x.type === 'event' && x.name === 'AllowlistUpdated')!.inputs,
     } as never,
     args: { leaseId: ids.length === 1 ? ids[0] : undefined },
-  }).catch(() => [])
+  })
 
   const allowedByLease = new Map<string, Map<string, boolean>>()
   for (const log of allowlistLogs) {
@@ -162,7 +136,7 @@ async function discoverLeases(client: PublicClient, contract: Address, owner: Ad
       const allowed = permissions
         ? [...permissions.entries()].filter(([, on]) => on).map(([addr]) => addr as Address)
         : []
-      return toLease(id, row, remaining, allowed)
+      return toLease(id, row, remaining, allowed, BigInt(Math.floor(Date.now() / 1000)))
     }),
   )
 
@@ -300,7 +274,7 @@ async function discoverActivity(
       id: `${log.transactionHash}-${log.logIndex}`,
       type,
       leaseId,
-      agent: lease?.delegate ?? args.delegate ?? args.owner ?? owner,
+      agent: activityAgent(type, args, lease?.delegate),
       recipient: args.recipient,
       amount: args.amount,
       timestamp,
