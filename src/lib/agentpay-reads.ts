@@ -126,6 +126,12 @@ async function discoverLeases(client: PublicClient, contract: Address, owner: Ad
     allowedByLease.set(key, set)
   }
 
+  // Use the chain's latest block timestamp so the window-index calculation
+  // matches the contract's remainingAllowance (which uses block.timestamp).
+  // Client wall-clock time can be ahead or behind and would report the wrong period.
+  const latest = await client.getBlock({ blockTag: 'latest' })
+  const nowSeconds = latest.timestamp
+
   const leases = await Promise.all(
     ids.map(async (id) => {
       const [row, remaining] = await Promise.all([
@@ -136,7 +142,7 @@ async function discoverLeases(client: PublicClient, contract: Address, owner: Ad
       const allowed = permissions
         ? [...permissions.entries()].filter(([, on]) => on).map(([addr]) => addr as Address)
         : []
-      return toLease(id, row, remaining, allowed, BigInt(Math.floor(Date.now() / 1000)))
+      return toLease(id, row, remaining, allowed, nowSeconds)
     }),
   )
 
