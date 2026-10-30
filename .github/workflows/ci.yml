@@ -1,4 +1,3 @@
-
 name: AgentPay CI
 
 on:
@@ -16,8 +15,10 @@ concurrency:
 
 jobs:
   contracts:
-    name: Build and test smart contracts
+    name: Build and test smart contracts with Arc Foundry
     runs-on: ubuntu-latest
+    env:
+      FOUNDRY_PROFILE: arc
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -27,17 +28,34 @@ jobs:
         with:
           bun-version-file: .bun-version
 
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: v1.7.1
+      - name: Install Arc Foundry v0.8.0-2
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="v0.8.0-2"
+          archive="arc-foundry-${version}-x86_64-unknown-linux-gnu.tar.gz"
+          base="https://github.com/circlefin/arc-foundry/releases/download/${version}"
+          curl --fail --location --retry 3 "${base}/${archive}" --output "/tmp/${archive}"
+          curl --fail --location --retry 3 "${base}/${archive}.sha256" --output "/tmp/${archive}.sha256"
+          (cd /tmp && sha256sum --check "${archive}.sha256")
+          mkdir -p /tmp/arc-foundry
+          tar -xzf "/tmp/${archive}" -C /tmp/arc-foundry
+          sudo install -m 0755 /tmp/arc-foundry/forge /usr/local/bin/arc-forge
+          sudo install -m 0755 /tmp/arc-foundry/cast /usr/local/bin/arc-cast
+          sudo install -m 0755 /tmp/arc-foundry/anvil /usr/local/bin/arc-anvil
+          arc-forge --version
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Build contracts
-        run: forge build
+      - name: Confirm Arc execution profile
+        shell: bash
+        run: |
+          set -euo pipefail
+          arc-forge config --json | grep -q '"network": "arc"'
 
-      - name: Run contract tests
-        run: forge test -vvv
-        
+      - name: Build contracts
+        run: arc-forge build
+
+      - name: Run contract tests under Arc rules
+        run: arc-forge test -vv
