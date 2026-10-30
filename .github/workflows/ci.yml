@@ -17,6 +17,8 @@ jobs:
   contracts:
     name: Build and test smart contracts with Arc Foundry
     runs-on: ubuntu-latest
+    env:
+      FOUNDRY_PROFILE: arc
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -56,6 +58,4 @@ jobs:
         run: arc-forge build
 
       - name: Run contract tests under Arc rules
-        env:
-          FOUNDRY_PROFILE: arc
         run: arc-forge test -vv
