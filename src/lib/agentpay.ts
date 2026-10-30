@@ -92,7 +92,7 @@ export const CONTRACT_ACTIONS = [
   { id: 'allowlist', label: 'Approve or remove a recipient', fn: 'setAllowlist', inContract: true, inApp: true },
   { id: 'revoke', label: 'Revoke a lease', fn: 'revoke', inContract: true, inApp: true },
   { id: 'withdraw', label: 'Withdraw unspent funds', fn: 'withdraw', inContract: true, inApp: true },
-  { id: 'spend', label: 'Spend as the agent', fn: 'spend', inContract: true, inApp: false },
+  { id: 'spend', label: 'Spend as the agent', fn: 'spend', inContract: true, inApp: true },
 ] as const
 
 export const ACTION_PENDING_REASON = 'This action is not yet available in the app.'
