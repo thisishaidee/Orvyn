@@ -5,6 +5,12 @@ import {AgentPayTestBase} from "./AgentPay.Base.t.sol";
 import {AgentPay} from "../AgentPay.sol";
 
 contract AgentPayCreateTest is AgentPayTestBase {
+    function test_ConstructorRejectsUnsupportedChain() public {
+        vm.chainId(1);
+        vm.expectRevert(abi.encodeWithSelector(AgentPay.UnsupportedChain.selector, 1));
+        new AgentPay();
+    }
+
     function test_CreateLeaseWithoutDeposit() public {
         vm.expectEmit(true, true, true, true, address(pay));
         emit AgentPay.LeaseCreated(1, leaseOwner, delegate, CAP, PERIOD, START + LEASE_DURATION, true);
