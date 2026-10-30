@@ -4,6 +4,7 @@ import { Badge, Button, Card, CardHeader, PageHeader } from '@/components/ui'
 import { InfoList, InfoRow } from '@/components/agentpay/Notices'
 import { BRAND } from '@/lib/brand'
 import { useNetworkInfo } from '@/lib/wallet'
+import { getAgentPayAddress, agentPayAddressEnvVar } from '@/lib/agentpay-address'
 import type { PageId } from '@/lib/route'
 
 const FEATURES: { icon: LucideIcon; title: string; text: string }[] = [
@@ -16,6 +17,8 @@ const FEATURES: { icon: LucideIcon; title: string; text: string }[] = [
 export function OverviewPage({ onNavigate }: { onNavigate: (page: PageId) => void }) {
   const { isConnected } = useAccount()
   const network = useNetworkInfo()
+  const contractAddress = getAgentPayAddress(network.chainId)
+  const contractConfigured = Boolean(contractAddress)
 
   return (
     <div className="space-y-6 md:space-y-8">
