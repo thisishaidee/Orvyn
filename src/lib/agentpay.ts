@@ -2,8 +2,8 @@ import { formatUnits, type Address, type Hex } from 'viem'
 
 /**
  * Domain model for the frontend. These types mirror what the AgentPay contract stores.
- * No data source is connected yet: the hooks below honestly report `not-connected`, and no record
- * is ever invented. When contract reads are wired in, only the two hooks need to change.
+ * Read data comes from the configured Arc AgentPay deployment; unavailable sources are reported
+ * explicitly and no record is ever invented.
  */
 
 export type DataState =
@@ -87,15 +87,15 @@ export { useOwnerLeases as useLeases, useOwnerActivityQuery as useActivity } fro
 
 /** What the deployed contract can do today. `inApp` flips to true as each action is wired up. */
 export const CONTRACT_ACTIONS = [
-  { id: 'create', label: 'Create a lease', fn: 'createLease', inContract: true, inApp: false },
-  { id: 'deposit', label: 'Add funds to a lease', fn: 'deposit', inContract: true, inApp: false },
-  { id: 'allowlist', label: 'Approve or remove a recipient', fn: 'setAllowlist', inContract: true, inApp: false },
-  { id: 'revoke', label: 'Revoke a lease', fn: 'revoke', inContract: true, inApp: false },
-  { id: 'withdraw', label: 'Withdraw unspent funds', fn: 'withdraw', inContract: true, inApp: false },
+  { id: 'create', label: 'Create a lease', fn: 'createLease', inContract: true, inApp: true },
+  { id: 'deposit', label: 'Add funds to a lease', fn: 'deposit', inContract: true, inApp: true },
+  { id: 'allowlist', label: 'Approve or remove a recipient', fn: 'setAllowlist', inContract: true, inApp: true },
+  { id: 'revoke', label: 'Revoke a lease', fn: 'revoke', inContract: true, inApp: true },
+  { id: 'withdraw', label: 'Withdraw unspent funds', fn: 'withdraw', inContract: true, inApp: true },
   { id: 'spend', label: 'Spend as the agent', fn: 'spend', inContract: true, inApp: false },
 ] as const
 
-export const ACTION_PENDING_REASON = 'This contract action exists, but the app is not connected to the contract yet.'
+export const ACTION_PENDING_REASON = 'This action is not yet available in the app.'
 
 // ---- formatting (display only) ----
 
