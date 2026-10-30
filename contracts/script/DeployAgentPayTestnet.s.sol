@@ -7,8 +7,8 @@ import {AgentPay} from "../AgentPay.sol";
 import {USDC_ADDRESS} from "../AgentPayConfig.sol";
 
 /// @notice Deploys AgentPay to Arc Testnet (chain ID 5042002).
-/// Uses the same Arc USDC ERC-20 precompile address as mainnet, verified
-/// against Circle's Arc network references before deployment.
+/// Uses Arc's documented USDC ERC-20 predeploy address, shared by mainnet
+/// and testnet; the script verifies code and six-decimal metadata at runtime.
 ///
 /// Required environment variables:
 ///   DEPLOYER_PRIVATE_KEY — signs the deployment; never logged.
