@@ -24,6 +24,7 @@ abstract contract AgentPayTestBase is Test {
     uint256 internal constant OWNER_FUNDS = 1_000_000e6;
 
     function setUp() public virtual {
+        vm.chainId(5042);
         vm.warp(START);
         MockUSDC mock = new MockUSDC();
         vm.etch(USDC_ADDRESS, address(mock).code);
