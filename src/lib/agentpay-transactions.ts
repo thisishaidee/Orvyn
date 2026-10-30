@@ -40,7 +40,7 @@ export function useAgentPayTransactions() {
   if (!isConnected || !connectedAddress) state = 'disconnected'
   else if (!gate.ok) state = gate.state
   else if (!walletClient || !publicClient) state = 'wallet-unavailable'
-  else if (walletChainId !== gate.chainId || walletClient.account.address.toLowerCase() !== connectedAddress.toLowerCase()) state = 'wallet-unavailable'
+  else if (walletChainId !== gate.chainId || walletClient.account?.address.toLowerCase() !== connectedAddress.toLowerCase()) state = 'wallet-unavailable'
   else state = 'ready'
 
   const assertReady = useCallback(() => {
@@ -48,7 +48,7 @@ export function useAgentPayTransactions() {
     if (!walletClient || !publicClient || !connectedAddress || walletChainId !== gate.chainId) {
       throw new Error('Connect your wallet on the selected Arc network before submitting a transaction.')
     }
-    if (walletClient.account.address.toLowerCase() !== connectedAddress.toLowerCase()) {
+    if (walletClient.account?.address.toLowerCase() !== connectedAddress.toLowerCase()) {
       throw new Error('The active wallet account changed. Reconnect before submitting.')
     }
     return { contract: gate.contract, chainId: gate.chainId, account: connectedAddress }
@@ -82,13 +82,13 @@ export function useAgentPayTransactions() {
   /** Submit an exact-amount USDC approval. This does not submit the next action. */
   const approveUsdc = useCallback(async (amount: bigint): Promise<TransactionResult> => {
     if (amount <= 0n) throw new Error('Approval amount must be greater than zero.')
-    assertReady()
+    const { contract } = assertReady()
     if (!walletClient) throw new Error('The wallet client is unavailable.')
     const hash = await walletClient.writeContract({
       address: ARC_USDC_ADDRESS,
       abi: erc20Abi,
       functionName: 'approve',
-      args: [gate.ok ? gate.contract : ('0x' as Address), amount],
+      args: [contract, amount],
     })
     return waitForSuccess(hash)
   }, [assertReady, walletClient, gate, waitForSuccess])
@@ -104,7 +104,7 @@ export function useAgentPayTransactions() {
     if (args.cap <= 0n || args.periodSeconds <= 0n || args.expiry <= 0n || args.initialDeposit < 0n) {
       throw new Error('Lease values are invalid.')
     }
-    const { contract, chainId } = assertReady()
+    const { contract } = assertReady()
     if (!walletClient) throw new Error('The wallet client is unavailable.')
     const hash = await walletClient.writeContract({
       address: contract,
