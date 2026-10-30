@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { KeyRound, Plus } from 'lucide-react'
 import { Button, Card, CardHeader, DataTable, PageHeader, ProgressBar, StatusBadge, type Column } from '@/components/ui'
 import { LeaseDetail } from '@/components/agentpay/LeaseDetail'
+import { CreateLeaseModal } from '@/components/agentpay/CreateLeaseModal'
 import { NotConnectedNotice, PendingAction } from '@/components/agentpay/Notices'
 import { SourceEmpty } from '@/components/agentpay/SourceEmpty'
 import {
@@ -28,6 +29,7 @@ export function LeasesPage() {
   const source = useLeases()
   const [filter, setFilter] = useState<Filter>('all')
   const [selectedId, setSelectedId] = useState<string | undefined>()
+  const [createOpen, setCreateOpen] = useState(false)
 
   const withStatus = useMemo(() => source.items.map((lease) => ({ lease, status: leaseStatus(lease) })), [source.items])
   const rows = withStatus.filter((r) => filter === 'all' || r.status === filter)
@@ -88,10 +90,11 @@ export function LeasesPage() {
         title="Leases"
         description="A lease is a spending agreement between you and an agent: how much it may spend, how often, until when, and to whom."
         actions={
-          <PendingAction iconLeft={<Plus className="size-4" aria-hidden />}>Create lease</PendingAction>
+          <Button iconLeft={<Plus className="size-4" aria-hidden />} onClick={() => setCreateOpen(true)}>Create lease</Button>
         }
       />
       <NotConnectedNotice subject="Leases" />
+      <CreateLeaseModal open={createOpen} onClose={() => setCreateOpen(false)} onCreated={() => setSelectedId(undefined)} />
 
       <Card padding="none">
         <div className="flex flex-col gap-3 p-4 pb-0 sm:p-5 sm:pb-0 lg:p-6 lg:pb-0">
