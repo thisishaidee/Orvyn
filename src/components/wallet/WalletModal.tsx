@@ -187,7 +187,7 @@ function WalletModalContent({ onClose }: { onClose: () => void }) {
           <Button variant="secondary" className="w-full sm:w-auto sm:flex-1" onClick={() => void copy(address, 'Address copied')} iconLeft={<Copy className="size-4" aria-hidden />}>
             Copy address
           </Button>
-          <Button variant="destructive" className="w-full sm:w-auto sm:flex-1" onClick={() => disconnect()}>
+          <Button variant="destructive" className="w-full sm:w-auto sm:flex-1" onClick={() => { setError(undefined); setPendingUid(undefined); disconnect() }}>
             Disconnect
           </Button>
         </div>

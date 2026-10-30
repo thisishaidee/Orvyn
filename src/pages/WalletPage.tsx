@@ -1,5 +1,5 @@
 import { Copy, ExternalLink, Wallet } from 'lucide-react'
-import { arcTestnet } from 'viem/chains'
+import { arc, arcTestnet } from 'viem/chains'
 import { useAccount, useDisconnect } from 'wagmi'
 import { toast } from 'sonner'
 import { Badge, Button, Card, CardHeader, Notice, PageHeader, StatCard } from '@/components/ui'
@@ -36,7 +36,12 @@ export function WalletPage() {
     }
   }
 
-  const explorerUrl = address && network.chainId === arcTestnet.id ? `${arcTestnet.blockExplorers.default.url}/address/${address}` : undefined
+  const explorerBase = network.chainId === arc.id
+    ? arc.blockExplorers.default.url
+    : network.chainId === arcTestnet.id
+      ? arcTestnet.blockExplorers.default.url
+      : undefined
+  const explorerUrl = address && explorerBase ? `${explorerBase}/address/${address}` : undefined
 
   return (
     <div className="space-y-6 md:space-y-8">

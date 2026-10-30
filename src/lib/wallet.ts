@@ -1,5 +1,5 @@
 import { erc20Abi, formatUnits } from 'viem'
-import { arcTestnet } from 'viem/chains'
+import { arc, arcTestnet } from 'viem/chains'
 import { useAccount, useChains, useReadContract } from 'wagmi'
 import { isSupportedChain } from '@/config'
 
@@ -20,8 +20,9 @@ export function useNetworkInfo(): NetworkInfo {
   const configured = useChains()
 
   if (!isConnected || chainId === undefined) return { label: 'No wallet connected', supported: false }
+  if (chainId === arc.id) return { chainId, label: 'Arc Mainnet', supported: true }
+  if (chainId === arcTestnet.id) return { chainId, label: 'Arc Testnet', supported: true }
   const match = configured.find((c) => c.id === chainId)
-  if (match && isSupportedChain(chainId)) return { chainId, label: match.name, supported: true }
   if (match) return { chainId, label: match.name, supported: false }
   return { chainId, label: `Chain ${chainId} (not supported by this app)`, supported: false }
 }

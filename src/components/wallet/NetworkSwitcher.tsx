@@ -1,18 +1,39 @@
+import { useEffect } from 'react'
 import { useSwitchChain, useChainId, useAccount } from 'wagmi'
 import { arc, arcTestnet } from 'viem/chains'
 import { Button } from '@/components/ui'
 import { isSupportedChain } from '@/config'
 import { useNetworkInfo } from '@/lib/wallet'
 
+function describeSwitchError(error: Error): string {
+  const text = error.message.toLowerCase()
+  if (/reject|denied|user rejected|user denied/.test(text)) {
+    return 'Network switch was rejected by the wallet. Nothing changed.'
+  }
+  if (text.includes('already pending') || text.includes('already processing')) {
+    return 'Your wallet already has a network request open. Open the wallet and approve or dismiss it, then try again.'
+  }
+  if (text.includes('4902') || text.includes('unrecognized chain') || text.includes('not added')) {
+    return 'This network is not in your wallet yet. Approve the add-network prompt, then try again if it does not switch automatically.'
+  }
+  return 'The network could not be switched. Try again from your wallet.'
+}
+
 /**
  * User-initiated network switch between Arc Mainnet and Arc Testnet.
- * Does not switch silently. Surfaces pending, rejection, and failure states.
+ * Does not switch silently. The underlying connector prompts the wallet to add the chain
+ * when it is not yet configured (EIP-3085 / error 4902).
  */
 export function NetworkSwitcher() {
   const { isConnected } = useAccount()
   const chainId = useChainId()
   const network = useNetworkInfo()
   const { switchChain, isPending, error, reset } = useSwitchChain()
+
+  // Drop a rejected or failed switch when the wallet disconnects, so reconnecting starts clean.
+  useEffect(() => {
+    if (!isConnected) reset()
+  }, [isConnected, reset])
 
   if (!isConnected) return null
 
@@ -22,11 +43,7 @@ export function NetworkSwitcher() {
     switchChain({ chainId: targetId })
   }
 
-  const errorMessage = error
-    ? /reject|denied|user rejected/i.test(error.message)
-      ? 'Network switch was rejected by the wallet.'
-      : `Switch failed: ${error.message}`
-    : null
+  const errorMessage = error ? describeSwitchError(error) : null
 
   return (
     <div className="space-y-3">
@@ -54,7 +71,7 @@ export function NetworkSwitcher() {
           Arc Testnet
         </Button>
       </div>
-      {isPending && <p className="text-support text-ink-soft">Switching network… confirm in your wallet.</p>}
+      {isPending && <p className="text-support text-ink-soft">Switching network… confirm in your wallet. If the network is new, approve adding it.</p>}
       {errorMessage && <p className="text-support text-danger">{errorMessage}</p>}
       {!isSupportedChain(chainId) && (
         <p className="text-support text-warning">
