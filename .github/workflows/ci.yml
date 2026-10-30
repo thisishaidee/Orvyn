@@ -60,5 +60,8 @@ jobs:
       - name: Typecheck frontend
         run: bun run typecheck
 
+      - name: Run frontend unit tests
+        run: bun test
+
       - name: Build frontend
         run: bun run build
