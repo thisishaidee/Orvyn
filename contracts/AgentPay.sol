@@ -41,6 +41,7 @@ contract AgentPay is ReentrancyGuard {
     /// @notice Per-lease recipient permissions, enforced only when enabled.
     mapping(uint256 => mapping(address => bool)) public allowedRecipients;
 
+    error UnsupportedChain(uint256 actualChainId);
     error LeaseNotFound(uint256 leaseId);
     error NotLeaseOwner(uint256 leaseId);
     error NotDelegate(uint256 leaseId);
@@ -70,6 +71,11 @@ contract AgentPay is ReentrancyGuard {
     event Withdrawn(uint256 indexed leaseId, address indexed owner, uint256 amount);
     event Deposited(uint256 indexed leaseId, address indexed owner, uint256 amount);
     event AllowlistUpdated(uint256 indexed leaseId, address indexed recipient, bool allowed);
+
+    /// @dev This release is intended for Arc mainnet only (chain ID 5042).
+    constructor() {
+        if (block.chainid != 5042) revert UnsupportedChain(block.chainid);
+    }
 
     /// @notice Create a lease owned by the caller, optionally funding it atomically.
     /// @dev Approve this contract for initialDeposit first. The first period starts
