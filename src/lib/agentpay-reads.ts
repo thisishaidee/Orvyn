@@ -131,12 +131,16 @@ async function discoverLeases(client: PublicClient, contract: Address, owner: Ad
   // Client wall-clock time can be ahead or behind and would report the wrong period.
   const latest = await client.getBlock({ blockTag: 'latest' })
   const nowSeconds = latest.timestamp
+  const blockNumber = latest.number
+  if (blockNumber === null) {
+    throw new Error('Latest block number is unavailable; cannot read a consistent lease snapshot.')
+  }
 
   const leases = await Promise.all(
     ids.map(async (id) => {
       const [row, remaining] = await Promise.all([
-        client.readContract({ address: contract, abi: agentPayAbi, functionName: 'leases', args: [id] }) as Promise<LeaseTuple>,
-        client.readContract({ address: contract, abi: agentPayAbi, functionName: 'remainingAllowance', args: [id] }) as Promise<bigint>,
+        client.readContract({ address: contract, abi: agentPayAbi, functionName: 'leases', args: [id], blockNumber }) as Promise<LeaseTuple>,
+        client.readContract({ address: contract, abi: agentPayAbi, functionName: 'remainingAllowance', args: [id], blockNumber }) as Promise<bigint>,
       ])
       const permissions = allowedByLease.get(id.toString())
       const allowed = permissions
