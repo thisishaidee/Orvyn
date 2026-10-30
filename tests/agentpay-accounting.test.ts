@@ -60,7 +60,7 @@ describe('event pagination completeness', () => {
   test('throws instead of returning partial logs when the chunk limit is hit', async () => {
     let calls = 0
     const client = {
-      getBlockNumber: async () => 5_000_000n,
+      getBlockNumber: async () => 10_000_000n,
       getLogs: async (args: { fromBlock?: bigint; toBlock?: bigint | 'latest' }) => {
         calls += 1
         if (args.toBlock === 'latest') throw new Error('range too large')
