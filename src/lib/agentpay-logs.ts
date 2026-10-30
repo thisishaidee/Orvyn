@@ -6,8 +6,11 @@
 import type { Address, PublicClient } from 'viem'
 import { agentPayAbi } from '@/lib/agentpay-abi'
 
-const CHUNK = 20_000n
-const MAX_CHUNKS = 200
+// Arc RPC endpoints can cap eth_getLogs ranges at 10,000 blocks.
+// Keep a margin below that limit so fallback pagination works on Arc.
+const CHUNK = 9_000n
+// Covers up to 9 million blocks before failing explicitly rather than returning partial history.
+const MAX_CHUNKS = 1_000
 
 export type LogQuery = {
   address: Address
