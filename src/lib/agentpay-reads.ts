@@ -92,7 +92,7 @@ function toLease(id: bigint, row: LeaseTuple, remaining: bigint, allowed: Addres
   }
 }
 
-async function discoverLeases(client: PublicClient, contract: Address, owner: Address): Promise<Lease[]> {
+async function discoverLeases(client: PublicClient, contract: Address, filter: { owner?: Address; delegate?: Address }): Promise<Lease[]> {
   const created = await getLogsChunked(client, {
     address: contract,
     event: {
@@ -100,7 +100,7 @@ async function discoverLeases(client: PublicClient, contract: Address, owner: Ad
       name: 'LeaseCreated',
       inputs: agentPayAbi.find((x) => x.type === 'event' && x.name === 'LeaseCreated')!.inputs,
     } as never,
-    args: { owner },
+    args: filter,
   })
 
   const ids = [...new Set(created.map((log) => (log as unknown as { args: { leaseId?: bigint } }).args.leaseId).filter((id): id is bigint => id !== undefined))]
@@ -151,6 +151,24 @@ async function discoverLeases(client: PublicClient, contract: Address, owner: Ad
   )
 
   return leases.sort((a, b) => Number(b.id) - Number(a.id))
+}
+
+/** Leases where the connected wallet is the named delegate, for agent-side spending. */
+export function useDelegateLeases(): DataSource<Lease> {
+  const gate = useReadGate()
+  const query = useQuery({
+    queryKey: ['agentpay', 'delegate-leases', gate.ok ? gate.chainId : 0, gate.ok ? gate.contract : 'none', gate.ok ? gate.address : 'none'],
+    enabled: gate.ok,
+    queryFn: () => {
+      if (!gate.ok) return []
+      return discoverLeases(gate.client, gate.contract, { delegate: gate.address })
+    },
+  })
+
+  if (!gate.ok) return { state: gate.state, items: [], reason: gate.reason }
+  if (query.isPending) return { state: 'loading', items: [], reason: 'Reading leases assigned to this agent wallet.' }
+  if (query.isError) return { state: 'error', items: [], reason: query.error instanceof Error ? query.error.message : 'The delegate lease read failed.' }
+  return { state: 'ready', items: query.data ?? [], reason: '' }
 }
 
 export function useNextLeaseId() {
