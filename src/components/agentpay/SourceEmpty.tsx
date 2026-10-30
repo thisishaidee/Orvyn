@@ -23,11 +23,18 @@ interface SourceEmptyProps {
  */
 export function SourceEmpty({ state, reason, subject, verb = 'are', readyTitle, readyDescription, icon, action }: SourceEmptyProps) {
   if (state === 'ready') return <EmptyState icon={icon} title={readyTitle} description={readyDescription} action={action} />
+  const title =
+    state === 'disconnected' ? `Connect a wallet to see ${subject.toLowerCase()}`
+    : state === 'unsupported-network' ? `Switch to Arc to see ${subject.toLowerCase()}`
+    : state === 'missing-address' ? `${subject} ${verb} unavailable`
+    : state === 'error' ? `Could not load ${subject.toLowerCase()}`
+    : state === 'loading' ? `Loading ${subject.toLowerCase()}`
+    : `${subject} ${verb} not connected yet`
   return (
     <EmptyState
       icon={icon}
-      title={`${subject} ${verb} not connected yet`}
-      description={`${reason} Once connected, ${subject.toLowerCase()} will show here.`}
+      title={title}
+      description={reason}
       action={action}
     />
   )

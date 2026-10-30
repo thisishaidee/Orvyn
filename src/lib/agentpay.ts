@@ -6,7 +6,14 @@ import { formatUnits, type Address, type Hex } from 'viem'
  * is ever invented. When contract reads are wired in, only the two hooks need to change.
  */
 
-export type DataState = 'not-connected' | 'loading' | 'error' | 'ready'
+export type DataState =
+  | 'disconnected'
+  | 'unsupported-network'
+  | 'missing-address'
+  | 'not-connected'
+  | 'loading'
+  | 'error'
+  | 'ready'
 
 export interface Lease {
   id: string
@@ -25,6 +32,8 @@ export interface Lease {
   /** The contract can only answer "is X allowed"; this list is rebuilt from AllowlistUpdated events. */
   allowedRecipients?: Address[]
   revoked: boolean
+  /** Rollover-aware remaining allowance read from the contract. Absent when unread. */
+  onChainRemaining?: bigint
 }
 
 export type LeaseStatus = 'active' | 'expired' | 'revoked'
@@ -36,12 +45,13 @@ export function leaseStatus(lease: Pick<Lease, 'revoked' | 'expiry'>, nowSeconds
 
 /** min(unused cap this period, lease balance), the same rule the contract applies. */
 export function remainingAllowance(lease: Lease, status: LeaseStatus): bigint {
+  if (lease.onChainRemaining !== undefined) return lease.onChainRemaining
   if (status !== 'active') return 0n
   const unused = lease.cap > lease.spentThisPeriod ? lease.cap - lease.spentThisPeriod : 0n
   return unused < lease.balance ? unused : lease.balance
 }
 
-export type ActivityType = 'LeaseCreated' | 'Deposited' | 'Spent' | 'Revoked' | 'Withdrawn'
+export type ActivityType = 'LeaseCreated' | 'Deposited' | 'Spent' | 'Revoked' | 'Withdrawn' | 'AllowlistUpdated'
 
 export interface ActivityItem {
   id: string
@@ -51,8 +61,8 @@ export interface ActivityItem {
   recipient?: Address
   /** USDC base units (6 decimals). */
   amount?: bigint
-  /** Unix seconds. */
-  timestamp: number
+  /** Unix seconds, when the block timestamp could be read. */
+  timestamp?: number
   txHash: Hex
   status: 'success' | 'pending' | 'failed'
 }
@@ -63,6 +73,7 @@ export const ACTIVITY_LABELS: Record<ActivityType, string> = {
   Spent: 'Payment sent',
   Revoked: 'Lease revoked',
   Withdrawn: 'Funds withdrawn',
+  AllowlistUpdated: 'Recipient permission updated',
 }
 
 export interface DataSource<T> {
@@ -72,18 +83,7 @@ export interface DataSource<T> {
   reason: string
 }
 
-const NOT_CONNECTED =
-  'This app does not read the AgentPay contract yet, and no contract address is configured here.'
-
-/** Placeholder until contract reads are connected. Always empty, never fabricated. */
-export function useLeases(): DataSource<Lease> {
-  return { state: 'not-connected', items: [], reason: NOT_CONNECTED }
-}
-
-/** Placeholder until contract events are connected. Always empty, never fabricated. */
-export function useActivity(): DataSource<ActivityItem> {
-  return { state: 'not-connected', items: [], reason: NOT_CONNECTED }
-}
+export { useOwnerLeases as useLeases, useOwnerActivityQuery as useActivity } from '@/lib/agentpay-reads'
 
 /** What the deployed contract can do today. `inApp` flips to true as each action is wired up. */
 export const CONTRACT_ACTIONS = [

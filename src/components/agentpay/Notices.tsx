@@ -1,15 +1,23 @@
 import { useId, type ReactNode } from 'react'
 import { Check, Minus } from 'lucide-react'
 import { Button, type ButtonProps, Notice } from '@/components/ui'
-import { ACTION_PENDING_REASON } from '@/lib/agentpay'
+import { ACTION_PENDING_REASON, useLeases } from '@/lib/agentpay'
 import { cn } from '@/lib/cn'
 
 /** Explains, once per page, why lists are empty and actions are disabled. */
 export function NotConnectedNotice({ subject }: { subject: string }) {
+  const source = useLeases()
+  if (source.state === 'ready') return null
+  const title =
+    source.state === 'disconnected' ? 'Wallet not connected'
+    : source.state === 'unsupported-network' ? 'Unsupported network'
+    : source.state === 'missing-address' ? 'Contract address not configured'
+    : source.state === 'error' ? 'Could not read the contract'
+    : source.state === 'loading' ? 'Reading the contract'
+    : 'Not connected to the contract yet'
   return (
-    <Notice tone="info" title="Not connected to the contract yet">
-      The AgentPay contract already supports creating, revoking and withdrawing, but this app does not read or call it yet and
-      no contract address is configured here. The {subject} section stays empty and action buttons stay disabled until that is wired up.
+    <Notice tone={source.state === 'error' ? 'danger' : 'info'} title={title}>
+      {source.reason || `The ${subject} section cannot be filled until the AgentPay contract can be read.`}
     </Notice>
   )
 }

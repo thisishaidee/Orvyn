@@ -36,11 +36,11 @@ const columns: Column<ActivityItem>[] = [
     align: 'right',
     cell: (a) => (a.amount === undefined ? <span className="text-ink-mute">—</span> : <span className="num">{formatUsdc(a.amount)} USDC</span>),
   },
-  { key: 'date', header: 'Date', cell: (a) => formatDateTime(a.timestamp) },
+  { key: 'date', header: 'Date', cell: (a) => (a.timestamp ? formatDateTime(a.timestamp) : <span className="text-ink-mute">—</span>) },
   { key: 'status', header: 'Status', cell: (a) => <StatusBadge status={a.status === 'success' ? 'success' : a.status === 'failed' ? 'failed' : 'pending'} /> },
 ]
 
-const TRACKED: ActivityType[] = ['LeaseCreated', 'Deposited', 'Spent', 'Revoked', 'Withdrawn']
+const TRACKED: ActivityType[] = ['LeaseCreated', 'Deposited', 'Spent', 'Revoked', 'Withdrawn', 'AllowlistUpdated']
 
 export function ActivityPage() {
   const source = useActivity()
