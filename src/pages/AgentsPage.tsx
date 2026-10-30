@@ -3,6 +3,7 @@ import { Bot, UserPlus } from 'lucide-react'
 import { Badge, Card, CardHeader, DataTable, PageHeader, StatusBadge, type Column } from '@/components/ui'
 import { NotConnectedNotice, PendingAction } from '@/components/agentpay/Notices'
 import { SourceEmpty } from '@/components/agentpay/SourceEmpty'
+import { DelegateSpendPanel } from '@/components/agentpay/DelegateSpendPanel'
 import { leaseStatus, shortAddress, useLeases, type Lease } from '@/lib/agentpay'
 
 interface AgentRow {
@@ -61,6 +62,8 @@ export function AgentsPage() {
         actions={<PendingAction iconLeft={<UserPlus className="size-4" aria-hidden />}>Authorize an agent</PendingAction>}
       />
       <NotConnectedNotice subject="Agents" />
+
+      <DelegateSpendPanel />
 
       <Card>
         <CardHeader title="How agents work in AgentPay" />
