@@ -1,16 +1,20 @@
 import { useSwitchChain, useChainId, useAccount } from 'wagmi'
 import { arc, arcTestnet } from 'viem/chains'
+import { Button } from '@/components/ui'
 import { isSupportedChain } from '@/config'
-import { getChainLabel } from '@/lib/agentpay-config'
+import { useNetworkInfo } from '@/lib/wallet'
 
+/**
+ * User-initiated network switch between Arc Mainnet and Arc Testnet.
+ * Does not switch silently. Surfaces pending, rejection, and failure states.
+ */
 export function NetworkSwitcher() {
   const { isConnected } = useAccount()
   const chainId = useChainId()
+  const network = useNetworkInfo()
   const { switchChain, isPending, error, reset } = useSwitchChain()
 
   if (!isConnected) return null
-
-  const currentSupported = isSupportedChain(chainId)
 
   const handleSwitch = (targetId: number) => {
     if (targetId === chainId) return
@@ -18,48 +22,43 @@ export function NetworkSwitcher() {
     switchChain({ chainId: targetId })
   }
 
+  const errorMessage = error
+    ? /reject|denied|user rejected/i.test(error.message)
+      ? 'Network switch was rejected by the wallet.'
+      : `Switch failed: ${error.message}`
+    : null
+
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2 text-sm">
-        <span className="font-medium">Network:</span>
-        <span className={currentSupported ? 'text-emerald-600' : 'text-amber-600'}>
-          {getChainLabel(chainId)}
-        </span>
-        {!currentSupported && (
-          <span className="text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded">
-            Unsupported
-          </span>
+      <div className="flex flex-wrap items-center gap-2 text-support">
+        <span className="text-ink-soft">Switch network</span>
+        {!isSupportedChain(chainId) && (
+          <span className="rounded-full bg-warning-soft px-2 py-0.5 text-xs text-warning">Unsupported</span>
         )}
       </div>
-
       <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
+        <Button
+          size="sm"
+          variant={chainId === arc.id ? 'primary' : 'secondary'}
           disabled={isPending || chainId === arc.id}
           onClick={() => handleSwitch(arc.id)}
-          className="px-3 py-1.5 text-sm rounded-md border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Arc Mainnet
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          size="sm"
+          variant={chainId === arcTestnet.id ? 'primary' : 'secondary'}
           disabled={isPending || chainId === arcTestnet.id}
           onClick={() => handleSwitch(arcTestnet.id)}
-          className="px-3 py-1.5 text-sm rounded-md border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Arc Testnet
-        </button>
+        </Button>
       </div>
-
-      {isPending && (
-        <p className="text-sm text-slate-500">Switching network… confirm in your wallet.</p>
-      )}
-
-      {error && (
-        <p className="text-sm text-red-600">
-          {error.message.includes('rejected') || error.message.includes('denied')
-            ? 'Network switch was rejected by the wallet.'
-            : `Switch failed: ${error.message}`}
+      {isPending && <p className="text-support text-ink-soft">Switching network… confirm in your wallet.</p>}
+      {errorMessage && <p className="text-support text-danger">{errorMessage}</p>}
+      {!isSupportedChain(chainId) && (
+        <p className="text-support text-warning">
+          You are on {network.label}. Switch to Arc Mainnet or Arc Testnet to use AgentPay.
         </p>
       )}
     </div>

@@ -1,64 +1,142 @@
-import { ConnectKitButton } from 'connectkit'
+import { Copy, ExternalLink, Wallet } from 'lucide-react'
+import { arcTestnet } from 'viem/chains'
 import { useAccount, useDisconnect } from 'wagmi'
+import { toast } from 'sonner'
+import { Badge, Button, Card, CardHeader, Notice, PageHeader, StatCard } from '@/components/ui'
+import { InfoList, InfoRow } from '@/components/agentpay/Notices'
+import { useWalletModal } from '@/components/wallet/WalletModalProvider'
 import { NetworkSwitcher } from '@/components/wallet/NetworkSwitcher'
-import { shortenAddress } from '@/lib/wallet'
-import { isSupportedChain } from '@/config'
-import { getChainLabel } from '@/lib/agentpay-config'
+import { WALLETCONNECT_ENV_VAR, useWalletOptions } from '@/lib/wallets'
+import { useNetworkInfo, useUsdcBalance, type BalanceState } from '@/lib/wallet'
+
+const BALANCE_HINT: Record<BalanceState, string> = {
+  disconnected: 'Connect a wallet to read its USDC balance.',
+  'unsupported-network': 'Switch your wallet to Arc Mainnet or Arc Testnet to read the USDC balance.',
+  loading: 'Reading the balance from the USDC contract.',
+  error: 'The balance could not be read. Check your connection and try again.',
+  ready: 'Read from the USDC contract on the connected Arc network.',
+}
 
 export function WalletPage() {
-  const { address, isConnected, chainId, status } = useAccount()
+  const { address, isConnected, isConnecting, isReconnecting, connector } = useAccount()
   const { disconnect } = useDisconnect()
+  const { open } = useWalletModal()
+  const wallets = useWalletOptions()
+  const network = useNetworkInfo()
+  const balance = useUsdcBalance()
+  const busy = isConnecting || isReconnecting
+
+  const copyAddress = async () => {
+    if (!address) return
+    try {
+      await navigator.clipboard.writeText(address)
+      toast.success('Address copied')
+    } catch {
+      toast.error('Could not copy. Select the address and copy it manually.')
+    }
+  }
+
+  const explorerUrl = address && network.chainId === arcTestnet.id ? `${arcTestnet.blockExplorers.default.url}/address/${address}` : undefined
 
   return (
-    <div className="max-w-md space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Wallet</h1>
-        <p className="text-slate-600 text-sm mt-1">
-          Connect an external wallet and switch between Arc Mainnet and Arc Testnet.
-        </p>
+    <div className="space-y-6 md:space-y-8">
+      <PageHeader
+        eyebrow="Wallet"
+        title="Wallet"
+        description="The wallet you connect owns your leases and signs every action. AgentPay never sees your keys."
+        actions={
+          isConnected ? (
+            <Button variant="secondary" onClick={() => disconnect()}>
+              Disconnect
+            </Button>
+          ) : (
+            <Button onClick={open} loading={busy} iconLeft={<Wallet className="size-4" aria-hidden />}>
+              Connect wallet
+            </Button>
+          )
+        }
+      />
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader
+              title="Connection"
+              action={
+                <Badge tone={isConnected ? 'success' : busy ? 'warning' : 'neutral'}>
+                  {isConnected ? 'Connected' : busy ? 'Connecting' : 'Not connected'}
+                </Badge>
+              }
+            />
+            <InfoList>
+              <InfoRow label="Wallet app">{isConnected ? connector?.name ?? 'Unknown wallet' : 'None'}</InfoRow>
+              <InfoRow label="Address">
+                {address ? (
+                  <span className="flex flex-col gap-2 md:items-end">
+                    <span className="num break-all font-mono text-support">{address}</span>
+                    <span className="flex flex-wrap gap-2">
+                      <Button size="sm" variant="secondary" onClick={() => void copyAddress()} iconLeft={<Copy className="size-4" aria-hidden />}>
+                        Copy
+                      </Button>
+                      {explorerUrl && (
+                        <a
+                          href={explorerUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex h-9 items-center gap-1.5 rounded-control border border-line-strong bg-surface px-3 text-support font-medium text-ink hover:bg-brand-mist"
+                        >
+                          Explorer <ExternalLink className="size-4" aria-hidden />
+                        </a>
+                      )}
+                    </span>
+                  </span>
+                ) : (
+                  <span className="text-ink-mute">Not available</span>
+                )}
+              </InfoRow>
+              <InfoRow label="Network" hint={network.chainId !== undefined ? `Chain ID ${network.chainId}` : undefined}>
+                <span className="inline-flex flex-wrap items-center gap-2 md:justify-end">
+                  {network.label}
+                  {isConnected && <Badge tone={network.supported ? 'success' : 'warning'}>{network.supported ? 'Supported' : 'Not supported'}</Badge>}
+                </span>
+              </InfoRow>
+              {isConnected && (
+                <InfoRow label="Change network">
+                  <NetworkSwitcher />
+                </InfoRow>
+              )}
+            </InfoList>
+          </Card>
+        </div>
+
+        <StatCard
+          tone="featured"
+          label="USDC balance"
+          icon={<Wallet className="size-5" />}
+          value={balance.state === 'ready' ? balance.formatted : undefined}
+          unit="USDC"
+          loading={balance.state === 'loading'}
+          hint={BALANCE_HINT[balance.state]}
+        />
       </div>
 
-      {!isConnected && (
-        <div className="space-y-3">
-          <p className="text-slate-600 text-sm">No wallet connected.</p>
-          <ConnectKitButton />
-        </div>
+      {balance.state === 'error' && (
+        <Notice tone="danger" title="Balance unavailable">
+          <Button size="sm" variant="secondary" onClick={balance.refetch} className="mt-2">
+            Try again
+          </Button>
+        </Notice>
       )}
 
-      {isConnected && address && (
-        <div className="space-y-4">
-          <div className="rounded-lg border border-slate-200 bg-white p-4 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-slate-500">Connected</span>
-              <span className="text-xs px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">
-                {status}
-              </span>
-            </div>
-            <p className="font-mono text-sm break-all">{shortenAddress(address, 6)}</p>
-            <p className="text-xs text-slate-500 break-all">
-              Full: <span className="font-mono">{address}</span>
-            </p>
-          </div>
-
-          <div className="rounded-lg border border-slate-200 bg-white p-4">
-            <NetworkSwitcher />
-          </div>
-
-          {!isSupportedChain(chainId) && (
-            <div className="rounded-md bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">
-              You are on {getChainLabel(chainId)}. Switch to Arc Mainnet or Arc Testnet to use AgentPay.
-            </div>
-          )}
-
-          <button
-            type="button"
-            onClick={() => disconnect()}
-            className="w-full px-4 py-2 text-sm rounded-md border border-slate-300 bg-white hover:bg-slate-50"
-          >
-            Disconnect
-          </button>
-        </div>
-      )}
+      <Notice tone="info" title="Connection options">
+        {wallets.detected.length > 0
+          ? `Detected in this browser: ${wallets.detected.map((w) => w.name).join(', ')}. `
+          : 'No browser wallet was detected here. '}
+        Coinbase Wallet is available too.{' '}
+        {wallets.walletConnectConfigured
+          ? 'WalletConnect is enabled for mobile wallets.'
+          : <>WalletConnect for mobile wallets is not enabled yet: it needs <code className="font-mono">{WALLETCONNECT_ENV_VAR}</code>.</>}
+      </Notice>
     </div>
   )
 }
