@@ -82,16 +82,17 @@ export function useAgentPayTransactions() {
   /** Submit an exact-amount USDC approval. This does not submit the next action. */
   const approveUsdc = useCallback(async (amount: bigint): Promise<TransactionResult> => {
     if (amount <= 0n) throw new Error('Approval amount must be greater than zero.')
-    const { contract } = assertReady()
+    const { contract, account } = assertReady()
     if (!walletClient) throw new Error('The wallet client is unavailable.')
     const hash = await walletClient.writeContract({
       address: ARC_USDC_ADDRESS,
       abi: erc20Abi,
       functionName: 'approve',
       args: [contract, amount],
+      account,
     })
     return waitForSuccess(hash)
-  }, [assertReady, walletClient, gate, waitForSuccess])
+  }, [assertReady, walletClient, waitForSuccess])
 
   const createLease = useCallback(async (args: {
     delegate: Address
@@ -104,85 +105,90 @@ export function useAgentPayTransactions() {
     if (args.cap <= 0n || args.periodSeconds <= 0n || args.expiry <= 0n || args.initialDeposit < 0n) {
       throw new Error('Lease values are invalid.')
     }
-    const { contract } = assertReady()
+    const { contract, account } = assertReady()
+    if (args.initialDeposit > 0n) {
+      const allowance = await getUsdcAllowance()
+      if (allowance < args.initialDeposit) throw new Error('USDC approval is insufficient. Approve the exact initial deposit first, wait for confirmation, then submit lease creation.')
+    }
     if (!walletClient) throw new Error('The wallet client is unavailable.')
     const hash = await walletClient.writeContract({
       address: contract,
       abi: agentPayWriteAbi,
       functionName: 'createLease',
       args: [args.delegate, args.cap, args.periodSeconds, args.expiry, args.allowlistEnabled, args.initialDeposit],
-      chain: undefined,
-      account: connectedAddress!,
+      account,
     })
     return waitForSuccess(hash)
-  }, [assertReady, walletClient, connectedAddress, waitForSuccess])
+  }, [assertReady, getUsdcAllowance, walletClient, waitForSuccess])
 
   const deposit = useCallback(async (leaseId: bigint, amount: bigint): Promise<TransactionResult> => {
     if (leaseId < 0n || amount <= 0n) throw new Error('Lease ID and deposit amount are invalid.')
-    const { contract } = assertReady()
+    const { contract, account } = assertReady()
+    const allowance = await getUsdcAllowance()
+    if (allowance < amount) throw new Error('USDC approval is insufficient. Approve the exact deposit amount first, wait for confirmation, then submit the deposit.')
     if (!walletClient) throw new Error('The wallet client is unavailable.')
     const hash = await walletClient.writeContract({
       address: contract,
       abi: agentPayWriteAbi,
       functionName: 'deposit',
       args: [leaseId, amount],
-      account: connectedAddress!,
+      account,
     })
     return waitForSuccess(hash)
-  }, [assertReady, walletClient, connectedAddress, waitForSuccess])
+  }, [assertReady, getUsdcAllowance, walletClient, waitForSuccess])
 
   const setAllowlist = useCallback(async (leaseId: bigint, recipient: Address, allowed: boolean): Promise<TransactionResult> => {
     if (leaseId < 0n) throw new Error('Lease ID is invalid.')
-    const { contract } = assertReady()
+    const { contract, account } = assertReady()
     if (!walletClient) throw new Error('The wallet client is unavailable.')
     const hash = await walletClient.writeContract({
       address: contract,
       abi: agentPayWriteAbi,
       functionName: 'setAllowlist',
       args: [leaseId, recipient, allowed],
-      account: connectedAddress!,
+      account,
     })
     return waitForSuccess(hash)
   }, [assertReady, walletClient, connectedAddress, waitForSuccess])
 
   const revoke = useCallback(async (leaseId: bigint): Promise<TransactionResult> => {
     if (leaseId < 0n) throw new Error('Lease ID is invalid.')
-    const { contract } = assertReady()
+    const { contract, account } = assertReady()
     if (!walletClient) throw new Error('The wallet client is unavailable.')
     const hash = await walletClient.writeContract({
       address: contract,
       abi: agentPayWriteAbi,
       functionName: 'revoke',
       args: [leaseId],
-      account: connectedAddress!,
+      account,
     })
     return waitForSuccess(hash)
   }, [assertReady, walletClient, connectedAddress, waitForSuccess])
 
   const withdraw = useCallback(async (leaseId: bigint): Promise<TransactionResult> => {
     if (leaseId < 0n) throw new Error('Lease ID is invalid.')
-    const { contract } = assertReady()
+    const { contract, account } = assertReady()
     if (!walletClient) throw new Error('The wallet client is unavailable.')
     const hash = await walletClient.writeContract({
       address: contract,
       abi: agentPayWriteAbi,
       functionName: 'withdraw',
       args: [leaseId],
-      account: connectedAddress!,
+      account,
     })
     return waitForSuccess(hash)
   }, [assertReady, walletClient, connectedAddress, waitForSuccess])
 
   const spend = useCallback(async (leaseId: bigint, recipient: Address, amount: bigint): Promise<TransactionResult> => {
     if (leaseId < 0n || amount <= 0n) throw new Error('Lease ID and spend amount are invalid.')
-    const { contract } = assertReady()
+    const { contract, account } = assertReady()
     if (!walletClient) throw new Error('The wallet client is unavailable.')
     const hash = await walletClient.writeContract({
       address: contract,
       abi: agentPayWriteAbi,
       functionName: 'spend',
       args: [leaseId, recipient, amount],
-      account: connectedAddress!,
+      account,
     })
     return waitForSuccess(hash)
   }, [assertReady, walletClient, connectedAddress, waitForSuccess])
