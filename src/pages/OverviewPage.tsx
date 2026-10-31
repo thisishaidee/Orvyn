@@ -4,7 +4,7 @@ import { Badge, Button, Card, CardHeader, PageHeader } from '@/components/ui'
 import { InfoList, InfoRow } from '@/components/agentpay/Notices'
 import { BRAND } from '@/lib/brand'
 import { useNetworkInfo } from '@/lib/wallet'
-import { getAgentPayAddress, agentPayAddressEnvVar } from '@/lib/agentpay-address'
+import { getAgentPayAddress } from '@/lib/agentpay-address'
 import type { PageId } from '@/lib/route'
 
 const FEATURES: { icon: LucideIcon; title: string; text: string }[] = [
@@ -60,7 +60,7 @@ export function OverviewPage({ onNavigate }: { onNavigate: (page: PageId) => voi
           <InfoRow label="Network" hint={isConnected ? network.label : undefined}>
             {isConnected ? <Badge tone={network.supported ? 'success' : 'warning'}>{network.supported ? 'Supported' : 'Not supported'}</Badge> : <Badge tone="neutral">Waiting for wallet</Badge>}
           </InfoRow>
-          <InfoRow label="Contract connection" hint={contractConfigured ? `Configured for ${network.label}.` : agentPayAddressEnvVar(network.chainId) ? `Set ${agentPayAddressEnvVar(network.chainId)} after deployment.` : 'Select an Arc network and configure its deployed contract address.'}>
+          <InfoRow label="Contract connection" hint={contractConfigured ? `Configured for ${network.label}.` : 'The contract address is not configured for this network yet.'}>
             <Badge tone={contractConfigured ? 'success' : 'warning'}>{contractConfigured ? 'Address configured' : 'Not configured'}</Badge>
           </InfoRow>
           <InfoRow label="Leases, agents and activity" hint="Read from the configured contract when your wallet is on the matching Arc network.">

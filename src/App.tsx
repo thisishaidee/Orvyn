@@ -1,10 +1,12 @@
-import { Activity, Bot, KeyRound, LayoutDashboard, Rocket, Settings, Wallet } from 'lucide-react'
+import { Activity, Bot, KeyRound, LayoutDashboard, Settings, Wallet } from 'lucide-react'
 import { AppShell, type NavItem } from '@/components/layout/AppShell'
 import { WalletButton } from '@/components/layout/WalletButton'
+import { Notice } from '@/components/ui'
+import { useAccount } from 'wagmi'
+import { isExpectedDeployer } from '@/lib/agentpay-deploy'
 import { WalletEvents } from '@/components/wallet/WalletEvents'
 import { WalletModalProvider } from '@/components/wallet/WalletModalProvider'
 import { DesignPreview } from '@/design-system/DesignPreview'
-import { useDeployNavVisible } from '@/lib/agentpay-deploy-storage'
 import { useRoute, type PageId } from '@/lib/route'
 import { ActivityPage } from '@/pages/ActivityPage'
 import { AgentsPage } from '@/pages/AgentsPage'
@@ -24,10 +26,8 @@ const NAV: NavItem[] = [
   { id: 'settings', label: 'Settings', icon: Settings },
 ]
 
-/** Shown only until AgentPay is deployed; the page stays reachable at ?page=deploy. */
-const DEPLOY_NAV: NavItem = { id: 'deploy', label: 'Deploy', icon: Rocket }
 
-function renderPage(page: PageId, navigate: (page: PageId) => void) {
+function renderPage(page: PageId, navigate: (page: PageId) => void, canAccessDeploy: boolean) {
   switch (page) {
     case 'agents':
       return <AgentsPage />
@@ -38,7 +38,13 @@ function renderPage(page: PageId, navigate: (page: PageId) => void) {
     case 'wallet':
       return <WalletPage />
     case 'deploy':
-      return <DeployPage />
+      return canAccessDeploy ? <DeployPage /> : (
+        <div className="space-y-6">
+          <Notice tone="warning" title="Restricted page">
+            Connect the designated deployment wallet to access this page.
+          </Notice>
+        </div>
+      )
     case 'settings':
       return <SettingsPage />
     case 'design':
@@ -50,19 +56,19 @@ function renderPage(page: PageId, navigate: (page: PageId) => void) {
 
 export default function App() {
   const [page, navigate] = useRoute()
-  const showDeploy = useDeployNavVisible()
-  const nav = showDeploy ? [...NAV, DEPLOY_NAV] : NAV
+  const { address, isConnected } = useAccount()
+  const canAccessDeploy = isConnected && isExpectedDeployer(address)
 
   return (
     <WalletModalProvider>
       <WalletEvents />
       <AppShell
-        nav={nav}
+        nav={NAV}
         activeId={page}
         onNavigate={(id) => navigate(id as PageId)}
         topBarActions={(tone) => <WalletButton tone={tone} />}
       >
-        {renderPage(page, navigate)}
+        {renderPage(page, navigate, canAccessDeploy)}
       </AppShell>
     </WalletModalProvider>
   )

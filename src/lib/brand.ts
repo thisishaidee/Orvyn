@@ -3,7 +3,7 @@
  * are listed in docs/brand-replacement.md.
  */
 export const BRAND = {
-  name: 'Orvyn',
+  name: 'Orvynn',
   tagline: 'Spending limits for AI agents, enforced by smart contract.',
   repoUrl: 'https://github.com/thisishaidee/orvynn',
 } as const

@@ -134,6 +134,13 @@ export function AppShell({ nav, activeId, onNavigate, sidebarFooter, topBarActio
           <div className="mx-auto w-full max-w-[1200px] px-4 pb-24 pt-6 sm:px-6 md:px-8 md:pt-8 xl:max-w-[1360px] xl:px-10">
             {topBarActions && <div className="mb-6 hidden justify-end md:flex">{actions('light')}</div>}
             {children}
+            <footer className="mt-10 border-t border-line px-4 py-6 text-support text-ink-soft sm:px-6 md:px-8">
+              <p>{BRAND.name} — {BRAND.tagline}</p>
+              <p className="mt-1">
+                Built for Arc. USDC spending limits enforced by smart contract.
+                <a className="ml-2 underline hover:text-ink" href={BRAND.repoUrl} target="_blank" rel="noreferrer">Source</a>
+              </p>
+            </footer>
           </div>
         </main>
       </div>
