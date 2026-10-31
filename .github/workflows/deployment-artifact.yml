@@ -40,12 +40,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          artifact_path="$(find contracts/out -type f -path '*/AgentPay.sol/AgentPay.json' -print -quit)"
+          artifact_path="$(find . -type f -name 'AgentPay.json' -not -path './node_modules/*' -not -path './.git/*' -print -quit)"
           if [ -z "$artifact_path" ]; then
-            echo "AgentPay compiler artifact not found under contracts/out"
-            find contracts/out -maxdepth 4 -type f -name 'AgentPay.json' -print
+            echo "AgentPay compiler artifact not found. Foundry output directories:"
+            find . -maxdepth 4 -type d -name out -print
             exit 1
           fi
+          echo "Using compiler artifact: $artifact_path"
           mkdir -p deployment-artifact
           jq '{
             contractName: .contractName,
