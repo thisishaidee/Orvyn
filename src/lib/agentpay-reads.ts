@@ -14,6 +14,11 @@ import type { ActivityItem, ActivityType, DataSource, Lease } from '@/lib/agentp
 import { activityAgent, currentPeriodSpent } from '@/lib/agentpay-accounting'
 import { getLogsChunked } from '@/lib/agentpay-logs'
 
+// Verified Arc Mainnet deployment block for the live AgentPay contract.
+// Testnet deployments, if configured later, must supply their own start block.
+const MAINNET_DEPLOYMENT_BLOCK = 28_888_842n
+const eventStartBlock = (chainId: number) => chainId === 5042 ? MAINNET_DEPLOYMENT_BLOCK : 0n
+
 export type ReadGate =
   | { ok: false; state: 'disconnected' | 'unsupported-network' | 'missing-address'; reason: string }
   | { ok: true; address: Address; chainId: number; contract: Address; client: PublicClient }
@@ -92,7 +97,7 @@ function toLease(id: bigint, row: LeaseTuple, remaining: bigint, allowed: Addres
   }
 }
 
-async function discoverLeases(client: PublicClient, contract: Address, filter: { owner?: Address; delegate?: Address }): Promise<Lease[]> {
+async function discoverLeases(client: PublicClient, contract: Address, filter: { owner?: Address; delegate?: Address }, fromBlock: bigint): Promise<Lease[]> {
   const created = await getLogsChunked(client, {
     address: contract,
     event: {
@@ -101,6 +106,7 @@ async function discoverLeases(client: PublicClient, contract: Address, filter: {
       inputs: agentPayAbi.find((x) => x.type === 'event' && x.name === 'LeaseCreated')!.inputs,
     } as never,
     args: filter,
+    fromBlock,
   })
 
   const ids = [...new Set(created.map((log) => (log as unknown as { args: { leaseId?: bigint } }).args.leaseId).filter((id): id is bigint => id !== undefined))]
@@ -114,6 +120,7 @@ async function discoverLeases(client: PublicClient, contract: Address, filter: {
       inputs: agentPayAbi.find((x) => x.type === 'event' && x.name === 'AllowlistUpdated')!.inputs,
     } as never,
     args: { leaseId: ids.length === 1 ? ids[0] : undefined },
+    fromBlock,
   })
 
   const allowedByLease = new Map<string, Map<string, boolean>>()
@@ -161,7 +168,7 @@ export function useDelegateLeases(): DataSource<Lease> {
     enabled: gate.ok,
     queryFn: () => {
       if (!gate.ok) return []
-      return discoverLeases(gate.client, gate.contract, { delegate: gate.address })
+      return discoverLeases(gate.client, gate.contract, { delegate: gate.address }, eventStartBlock(gate.chainId))
     },
   })
 
@@ -221,7 +228,7 @@ export function useOwnerLeases(): DataSource<Lease> {
     enabled: gate.ok,
     queryFn: () => {
       if (!gate.ok) return []
-      return discoverLeases(gate.client, gate.contract, { owner: gate.address })
+      return discoverLeases(gate.client, gate.contract, { owner: gate.address }, eventStartBlock(gate.chainId))
     },
   })
 
@@ -244,22 +251,23 @@ async function discoverActivity(
   contract: Address,
   owner: Address,
   leases: Lease[],
+  fromBlock: bigint,
 ): Promise<ActivityItem[]> {
   const leaseIds = leases.map((l) => BigInt(l.id))
   const byId = new Map(leases.map((l) => [l.id, l]))
 
   const [created, deposited, withdrawn, spent, revoked, allowlist] = await Promise.all([
-    getLogsChunked(client, { address: contract, event: eventAbi('LeaseCreated') as never, args: { owner } }),
+    getLogsChunked(client, { address: contract, event: eventAbi('LeaseCreated') as never, args: { owner }, fromBlock }),
     getLogsChunked(client, { address: contract, event: eventAbi('Deposited') as never, args: { owner } }),
     getLogsChunked(client, { address: contract, event: eventAbi('Withdrawn') as never, args: { owner } }),
     leaseIds.length
-      ? getLogsChunked(client, { address: contract, event: eventAbi('Spent') as never })
+      ? getLogsChunked(client, { address: contract, event: eventAbi('Spent') as never, fromBlock })
       : Promise.resolve([]),
     leaseIds.length
-      ? getLogsChunked(client, { address: contract, event: eventAbi('Revoked') as never })
+      ? getLogsChunked(client, { address: contract, event: eventAbi('Revoked') as never, fromBlock })
       : Promise.resolve([]),
     leaseIds.length
-      ? getLogsChunked(client, { address: contract, event: eventAbi('AllowlistUpdated') as never })
+      ? getLogsChunked(client, { address: contract, event: eventAbi('AllowlistUpdated') as never, fromBlock })
       : Promise.resolve([]),
   ])
 
@@ -325,7 +333,7 @@ export function useOwnerActivity(leases: Lease[], leasesReady: boolean): DataSou
     enabled: gate.ok && leasesReady,
     queryFn: () => {
       if (!gate.ok) return []
-      return discoverActivity(gate.client, gate.contract, gate.address, leases)
+      return discoverActivity(gate.client, gate.contract, gate.address, leases, eventStartBlock(gate.chainId))
     },
   })
 
