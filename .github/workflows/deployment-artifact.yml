@@ -1,0 +1,59 @@
+name: AgentPay deployment artifact
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "contracts/**"
+      - "foundry.toml"
+      - ".github/workflows/deployment-artifact.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-artifact:
+    name: Compile and package AgentPay
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: v1.7.1
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Compile contracts
+        run: forge build
+
+      - name: Extract AgentPay deployment artifact
+        run: |
+          mkdir -p deployment-artifact
+          jq '{
+            contractName: .contractName,
+            sourceName: .sourceName,
+            abi: .abi,
+            bytecode: .bytecode.object,
+            deployedBytecode: .deployedBytecode.object
+          }' contracts/out/AgentPay.sol/AgentPay.json > deployment-artifact/AgentPay.json
+          test "$(jq -r '.contractName' deployment-artifact/AgentPay.json)" = "AgentPay"
+          test "$(jq -r '.bytecode | length' deployment-artifact/AgentPay.json)" -gt 2
+          test "$(jq -r '.abi | length' deployment-artifact/AgentPay.json)" -gt 0
+
+      - name: Upload compiled artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: agentpay-deployment-artifact
+          path: deployment-artifact/AgentPay.json
+          if-no-files-found: error
+          retention-days: 14
