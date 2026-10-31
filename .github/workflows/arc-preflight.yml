@@ -1,0 +1,56 @@
+name: Arc Mainnet read-only preflight
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/arc-preflight.yml"
+      - "contracts/AgentPayConfig.sol"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    name: Check Arc Mainnet RPC and configured USDC
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Arc Mainnet chain ID
+        shell: bash
+        run: |
+          set -euo pipefail
+          response="$(curl --fail --silent --show-error https://rpc.mainnet.arc.io \
+            -H 'content-type: application/json' \
+            --data '{"jsonrpc":"2.0","id":1,"method":"eth_chainId","params":[]}')"
+          actual="$(jq -r '.result // empty' <<< "$response")"
+          test "$actual" = "0x13b2" || {
+            echo "Unexpected chain ID: $actual"
+            exit 1
+          }
+          echo "Arc Mainnet chain ID confirmed: 5042"
+
+      - name: Check configured USDC bytecode and decimals
+        shell: bash
+        run: |
+          set -euo pipefail
+          usdc="0x3600000000000000000000000000000000000000"
+          code_response="$(curl --fail --silent --show-error https://rpc.mainnet.arc.io \
+            -H 'content-type: application/json' \
+            --data "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"eth_getCode\",\"params\":[\"$usdc\",\"latest\"]}")"
+          code="$(jq -r '.result // empty' <<< "$code_response")"
+          test -n "$code" && test "$code" != "0x" || {
+            echo "No bytecode at configured USDC address"
+            exit 1
+          }
+
+          decimals_response="$(curl --fail --silent --show-error https://rpc.mainnet.arc.io \
+            -H 'content-type: application/json' \
+            --data "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"eth_call\",\"params\":[{\"to\":\"$usdc\",\"data\":\"0x313ce567\"},\"latest\"]}")"
+          decimals="$(jq -r '.result // empty' <<< "$decimals_response")"
+          test "$decimals" = "0x0000000000000000000000000000000000000000000000000000000000000006" || {
+            echo "Unexpected USDC decimals: $decimals"
+            exit 1
+          }
+          echo "Configured Arc USDC contract exists and reports 6 decimals."
+          echo "Read-only preflight only; no wallet, signing, or transaction.";
