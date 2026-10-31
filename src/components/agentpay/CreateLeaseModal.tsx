@@ -87,7 +87,7 @@ export function CreateLeaseModal({ open, onClose, onCreated }: {
           {(props) => <Input {...props} value={delegate} onChange={(e) => setDelegate(e.target.value)} placeholder="0x…" spellCheck={false} autoCapitalize="none" />}
         </Field>
         <Field label="Spending cap per period" hint="USDC, up to six decimal places.">
-          {(props) => <Input {...props} type="number" min="0.000001" step="0.000001" value={cap} onChange={(e) => setCap(e.target.value)} placeholder="100.00" />}
+          {(props) => <Input {...props} type="number" min="0.000001" step="0.000001" value={cap} onChange={(e) => setCap(e.target.value)} placeholder="Enter amount (e.g. 1.00)" />}
         </Field>
         <Field label="Spending period">
           {(props) => <Select {...props} value={period} onChange={(e) => setPeriod(e.target.value)}>
