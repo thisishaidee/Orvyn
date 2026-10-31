@@ -36,28 +36,28 @@ jobs:
       - name: Compile contracts
         run: forge build
 
+      - name: Inspect Foundry artifact schema
+        shell: bash
+        run: |
+          set -euo pipefail
+          artifact_path="./contracts/out/AgentPay.sol/AgentPay.json"
+          test -f "$artifact_path"
+          jq '{keys: keys, contractName: .contractName, bytecodeType: (.bytecode | type), bytecodeKeys: (if (.bytecode | type) == "object" then (.bytecode | keys) else [] end), abiType: (.abi | type)}' "$artifact_path"
+
       - name: Extract AgentPay deployment artifact
         shell: bash
         run: |
           set -euo pipefail
-          artifact_path="$(find . -type f -name 'AgentPay.json' -not -path './node_modules/*' -not -path './.git/*' -print -quit)"
-          if [ -z "$artifact_path" ]; then
-            echo "AgentPay compiler artifact not found. Foundry output directories:"
-            find . -maxdepth 4 -type d -name out -print
-            exit 1
-          fi
-          echo "Using compiler artifact: $artifact_path"
+          artifact_path="./contracts/out/AgentPay.sol/AgentPay.json"
           mkdir -p deployment-artifact
           jq '{
-            contractName: .contractName,
-            sourceName: .sourceName,
+            contractName: (.contractName // "AgentPay"),
+            sourceName: (.sourceName // "contracts/AgentPay.sol"),
             abi: .abi,
-            bytecode: .bytecode.object,
-            deployedBytecode: .deployedBytecode.object
+            bytecode: (if (.bytecode | type) == "object" then .bytecode.object else .bytecode end),
+            deployedBytecode: (if (.deployedBytecode | type) == "object" then .deployedBytecode.object else .deployedBytecode end)
           }' "$artifact_path" > deployment-artifact/AgentPay.json
-          test "$(jq -r '.contractName' deployment-artifact/AgentPay.json)" = "AgentPay"
-          test "$(jq -r '.bytecode | length' deployment-artifact/AgentPay.json)" -gt 2
-          test "$(jq -r '.abi | length' deployment-artifact/AgentPay.json)" -gt 0
+          jq -e '.contractName == "AgentPay" and (.abi | type == "array" and length > 0) and (.bytecode | type == "string" and length > 2)' deployment-artifact/AgentPay.json >/dev/null
 
       - name: Upload compiled artifact
         uses: actions/upload-artifact@v4
