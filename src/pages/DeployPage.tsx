@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { CheckCircle2, ExternalLink, FileCheck, Rocket, ShieldAlert, Trash2 } from 'lucide-react'
 import { arc } from 'viem/chains'
-import { createPublicClient, erc20Abi, http, keccak256 } from 'viem'
+import { createPublicClient, erc20Abi, formatUnits, http, keccak256 } from 'viem'
 import { deployContract } from 'viem/actions'
 import { useAccount, useConnectorClient, useSwitchChain } from 'wagmi'
 import { toast } from 'sonner'
@@ -69,6 +69,8 @@ export function DeployPage() {
   const [deployerCheck, setDeployerCheck] = useState<CheckState>({ status: 'idle' })
   const [usdcCheck, setUsdcCheck] = useState<CheckState>({ status: 'idle' })
   const [gasEstimate, setGasEstimate] = useState<bigint | undefined>()
+  const [gasPrice, setGasPrice] = useState<bigint | undefined>()
+  const [gasFeeProblem, setGasFeeProblem] = useState<string | undefined>()
   const [txHash, setTxHash] = useState<`0x${string}` | undefined>(initialSaved?.txHash)
   const [deployedAddress, setDeployedAddress] = useState<`0x${string}` | undefined>(initialSaved?.contractAddress)
   const [postCheck, setPostCheck] = useState<CheckState>({ status: 'idle' })
@@ -103,6 +105,8 @@ export function DeployPage() {
     setDeployerCheck({ status: 'checking' })
     setUsdcCheck({ status: 'checking' })
     setGasEstimate(undefined)
+    setGasPrice(undefined)
+    setGasFeeProblem(undefined)
     setGasProblem(undefined)
 
     if (!isDeployer) {
@@ -139,6 +143,13 @@ export function DeployPage() {
         return
       }
       setGasEstimate(gas)
+      try {
+        const price = await mainnetClient.getGasPrice()
+        if (price <= 0n) throw new Error('Arc Mainnet returned an invalid gas price.')
+        setGasPrice(price)
+      } catch (feeErr) {
+        setGasFeeProblem(feeErr instanceof Error ? feeErr.message : 'Could not read the current gas price.')
+      }
     } catch (err) {
       setUsdcCheck({ status: 'fail', detail: err instanceof Error ? err.message : 'Safety checks failed.' })
     }
@@ -368,8 +379,14 @@ export function DeployPage() {
             <InfoRow label="Arc USDC">{checkText(usdcCheck, `${USDC_ADDRESS} (6 decimals expected)`)}</InfoRow>
             <InfoRow label="Gas estimate">
               {gasEstimate
-                ? `${gasEstimate.toString()} gas estimated. Limit sent: ${gasLimitWithBuffer(gasEstimate).toString()} (+${GAS_BUFFER_PERCENT}% buffer). The wallet will show the network fee before you approve; no fee estimate is shown here.`
+                ? `${gasEstimate.toString()} gas estimated. Limit sent: ${gasLimitWithBuffer(gasEstimate).toString()} (+${GAS_BUFFER_PERCENT}% buffer).`
                 : (gasProblem ?? 'Not checked')}
+            </InfoRow>
+            <InfoRow label="Estimated network fee">
+              {gasEstimate && gasPrice
+                ? `${formatUnits((gasLimitWithBuffer(gasEstimate) * gasPrice * 1_000_000n + 500_000_000_000_000_000n) / 1_000_000_000_000_000_000n, 6)} USDC (current gas price: ${formatUnits(gasPrice, 9)} Gwei; includes gas-limit buffer).`
+                : (gasFeeProblem ?? 'Run checks to read the current fee estimate.')}
+              <span className="block text-xs text-muted-foreground">Estimate only. Your wallet displays the final fee before you approve.</span>
             </InfoRow>
             <InfoRow label="Creation bytecode">
               <span className="font-mono text-sm">
