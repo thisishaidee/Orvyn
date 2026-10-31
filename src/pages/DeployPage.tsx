@@ -187,6 +187,22 @@ export function DeployPage() {
       persist(hash, 'pending', contractAddress)
 
       try {
+        // Verify the confirmed creation transaction is exactly the artifact
+        // reviewed and compiled into this app. AgentPay has no constructor
+        // arguments, so the transaction input must equal the full creation
+        // bytecode. This prevents a different contract from being accepted
+        // merely because it exposes similarly named getters.
+        const deploymentTx = await mainnetClient.getTransaction({ hash })
+        if (deploymentTx.to !== null) {
+          throw new Error('Deployment transaction is not a contract-creation transaction.')
+        }
+        if (deploymentTx.from.toLowerCase() !== EXPECTED_DEPLOYER.toLowerCase()) {
+          throw new Error(`Deployment transaction sender is ${deploymentTx.from}, expected ${EXPECTED_DEPLOYER}.`)
+        }
+        if (deploymentTx.input.toLowerCase() !== CREATION_BYTECODE.toLowerCase()) {
+          throw new Error('Deployment transaction input does not match the reviewed AgentPay creation bytecode.')
+        }
+
         const runtime = await mainnetClient.getBytecode({ address: contractAddress })
         if (!runtime || runtime === '0x') throw new Error('Deployed address has no code.')
         const [usdc, nextLeaseId] = await Promise.all([
