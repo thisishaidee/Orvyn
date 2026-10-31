@@ -258,8 +258,8 @@ async function discoverActivity(
 
   const [created, deposited, withdrawn, spent, revoked, allowlist] = await Promise.all([
     getLogsChunked(client, { address: contract, event: eventAbi('LeaseCreated') as never, args: { owner }, fromBlock }),
-    getLogsChunked(client, { address: contract, event: eventAbi('Deposited') as never, args: { owner } }),
-    getLogsChunked(client, { address: contract, event: eventAbi('Withdrawn') as never, args: { owner } }),
+    getLogsChunked(client, { address: contract, event: eventAbi('Deposited') as never, args: { owner }, fromBlock }),
+    getLogsChunked(client, { address: contract, event: eventAbi('Withdrawn') as never, args: { owner }, fromBlock }),
     leaseIds.length
       ? getLogsChunked(client, { address: contract, event: eventAbi('Spent') as never, fromBlock })
       : Promise.resolve([]),
