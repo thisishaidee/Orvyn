@@ -1,0 +1,68 @@
+name: AgentPay deployment artifact
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "contracts/**"
+      - "foundry.toml"
+      - ".github/workflows/deployment-artifact.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-artifact:
+    name: Compile and package AgentPay
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: v1.7.1
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Compile contracts
+        run: forge build
+
+      - name: Inspect Foundry artifact schema
+        shell: bash
+        run: |
+          set -euo pipefail
+          artifact_path="./contracts/out/AgentPay.sol/AgentPay.json"
+          test -f "$artifact_path"
+          jq '{keys: keys, contractName: .contractName, bytecodeType: (.bytecode | type), bytecodeKeys: (if (.bytecode | type) == "object" then (.bytecode | keys) else [] end), abiType: (.abi | type)}' "$artifact_path"
+
+      - name: Extract AgentPay deployment artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          artifact_path="./contracts/out/AgentPay.sol/AgentPay.json"
+          mkdir -p deployment-artifact
+          jq '{
+            contractName: (.contractName // "AgentPay"),
+            sourceName: (.sourceName // "contracts/AgentPay.sol"),
+            abi: .abi,
+            bytecode: (if (.bytecode | type) == "object" then .bytecode.object else .bytecode end),
+            deployedBytecode: (if (.deployedBytecode | type) == "object" then .deployedBytecode.object else .deployedBytecode end)
+          }' "$artifact_path" > deployment-artifact/AgentPay.json
+          jq -e '.contractName == "AgentPay" and (.abi | type == "array" and length > 0) and (.bytecode | type == "string" and length > 2)' deployment-artifact/AgentPay.json >/dev/null
+
+      - name: Upload compiled artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: agentpay-deployment-artifact
+          path: deployment-artifact/AgentPay.json
+          if-no-files-found: error
+          retention-days: 14
