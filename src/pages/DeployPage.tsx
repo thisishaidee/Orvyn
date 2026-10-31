@@ -1,21 +1,25 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { CheckCircle2, ExternalLink, FileCheck, Rocket, ShieldAlert, XCircle } from 'lucide-react'
+import { CheckCircle2, ExternalLink, FileCheck, Rocket, ShieldAlert, Trash2 } from 'lucide-react'
 import { arc } from 'viem/chains'
 import { createPublicClient, erc20Abi, formatUnits, http, keccak256 } from 'viem'
 import { deployContract } from 'viem/actions'
 import { useAccount, useConnectorClient, useSwitchChain } from 'wagmi'
 import { toast } from 'sonner'
-import { Badge, Button, Card, CardHeader, Notice, PageHeader } from '@/components/ui'
+import { Badge, Button, Card, CardHeader, ConfirmDialog, Notice, PageHeader } from '@/components/ui'
 import { InfoList, InfoRow } from '@/components/agentpay/Notices'
 import { NetworkSwitcher } from '@/components/wallet/NetworkSwitcher'
 import artifact from '@/lib/agentpay-artifact.generated.json'
+import { clearSavedDeployment, readSavedDeployment, useSavedDeployment, writeSavedDeployment } from '@/lib/agentpay-deploy-storage'
 import {
   ARC_MAINNET_CHAIN_ID,
+  GAS_BUFFER_PERCENT,
   canStartDeployment,
   checksStale,
   classifyReceiptError,
   classifyReceiptStatus,
   EXPECTED_DEPLOYER as EXPECTED_DEPLOYER_CONST,
+  gasLimitWithBuffer,
+  isSaneGasEstimate,
   type DeployPhase,
   type ReceiptOutcome,
   type SafetyCheck,
@@ -56,15 +60,26 @@ export function DeployPage() {
   const { data: connectorClient } = useConnectorClient()
   const { switchChain } = useSwitchChain()
 
-  const [phase, setPhase] = useState<Phase>('review')
+  // Restore a saved deployment (hash + result only) so a reload never loses track of it.
+  const [initialSaved] = useState(() => readSavedDeployment())
+  const saved = useSavedDeployment()
+  const [phase, setPhase] = useState<Phase>(() =>
+    !initialSaved ? 'review' : initialSaved.phase === 'failed' ? 'failed' : initialSaved.phase,
+  )
   const [deployerCheck, setDeployerCheck] = useState<CheckState>({ status: 'idle' })
   const [usdcCheck, setUsdcCheck] = useState<CheckState>({ status: 'idle' })
   const [gasEstimate, setGasEstimate] = useState<bigint | undefined>()
-  const [txHash, setTxHash] = useState<`0x${string}` | undefined>()
-  const [deployedAddress, setDeployedAddress] = useState<`0x${string}` | undefined>()
+  const [txHash, setTxHash] = useState<`0x${string}` | undefined>(initialSaved?.txHash)
+  const [deployedAddress, setDeployedAddress] = useState<`0x${string}` | undefined>(initialSaved?.contractAddress)
   const [postCheck, setPostCheck] = useState<CheckState>({ status: 'idle' })
   const [checkingReceipt, setCheckingReceipt] = useState(false)
-  const [failure, setFailure] = useState<string | undefined>()
+  const [failure, setFailure] = useState<string | undefined>(
+    initialSaved?.phase === 'failed'
+      ? 'The saved deployment transaction reverted on-chain. No contract was created; you may start a new deployment.'
+      : undefined,
+  )
+  const [gasProblem, setGasProblem] = useState<string | undefined>()
+  const [confirmClear, setConfirmClear] = useState(false)
 
   const bytecodeHash = useMemo(() => keccak256(CREATION_BYTECODE), [])
 
@@ -88,6 +103,7 @@ export function DeployPage() {
     setDeployerCheck({ status: 'checking' })
     setUsdcCheck({ status: 'checking' })
     setGasEstimate(undefined)
+    setGasProblem(undefined)
 
     if (!isDeployer) {
       setDeployerCheck({ status: 'fail', detail: `Connected wallet ${address} is not the expected deployer ${EXPECTED_DEPLOYER}.` })
@@ -111,6 +127,10 @@ export function DeployPage() {
       setUsdcCheck({ status: 'ok', detail: `${USDC_ADDRESS} (6 decimals, code present)` })
 
       const gas = await mainnetClient.estimateGas({ account: address, data: CREATION_BYTECODE })
+      if (!isSaneGasEstimate(gas)) {
+        setGasProblem(`Gas estimate ${gas.toString()} is outside the expected range. Deployment is blocked.`)
+        return
+      }
       setGasEstimate(gas)
     } catch (err) {
       setUsdcCheck({ status: 'fail', detail: err instanceof Error ? err.message : 'Safety checks failed.' })
@@ -118,6 +138,20 @@ export function DeployPage() {
   }, [address, isDeployer])
 
   // Deploy: wallet-only. The user confirms inside MetaMask; nothing is sent from here.
+  // Persist only public facts: hash, phase and the resulting contract address.
+  const persist = useCallback((hash: `0x${string}`, nextPhase: 'pending' | 'deployed' | 'failed', contractAddress?: `0x${string}`) => {
+    const previous = readSavedDeployment()
+    writeSavedDeployment({
+      v: 1,
+      txHash: hash,
+      chainId: ARC_MAINNET_CHAIN_ID,
+      deployer: EXPECTED_DEPLOYER,
+      phase: nextPhase,
+      contractAddress,
+      savedAt: previous?.txHash === hash ? previous.savedAt : Date.now(),
+    })
+  }, [])
+
   const checkReceipt = useCallback(async (hash: `0x${string}`) => {
     setCheckingReceipt(true)
     try {
@@ -125,6 +159,7 @@ export function DeployPage() {
       const outcome = classifyReceiptStatus(receipt.status, receipt.contractAddress ?? undefined)
       if (outcome.kind === 'reverted') {
         // Conclusively failed: the only case that allows trying again.
+        persist(hash, 'failed')
         setPhase('failed')
         setFailure('The deployment transaction reverted on-chain. No contract was created; you may start a new deployment.')
         return
@@ -135,6 +170,7 @@ export function DeployPage() {
       }
       if (outcome.kind === 'pending') return
       const contractAddress = outcome.contractAddress
+      persist(hash, 'deployed', contractAddress)
 
       try {
         const runtime = await mainnetClient.getBytecode({ address: contractAddress })
@@ -168,10 +204,27 @@ export function DeployPage() {
     } finally {
       setCheckingReceipt(false)
     }
-  }, [])
+  }, [persist])
+
+  // After a reload, re-check the saved transaction (pending or deployed) against the chain.
+  useEffect(() => {
+    if (!initialSaved || initialSaved.phase === 'failed') return
+    const timer = setTimeout(() => void checkReceipt(initialSaved.txHash), 0)
+    return () => clearTimeout(timer)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const clearState = () => {
+    clearSavedDeployment()
+    setPhase('review')
+    setTxHash(undefined)
+    setDeployedAddress(undefined)
+    setPostCheck({ status: 'idle' })
+    setFailure(undefined)
+    setConfirmClear(false)
+  }
 
   const deploy = useCallback(async () => {
-    if (!connectorClient || !address) return
+    if (!connectorClient || !address || gasEstimate === undefined) return
     // Revalidate the wallet identity and network immediately before submission:
     // MetaMask may have switched accounts or chains since the checks ran.
     if (
@@ -187,18 +240,26 @@ export function DeployPage() {
       toast.error('Wallet or network changed since the checks. Run the checks again.')
       return
     }
+    let gasLimit: bigint
+    try {
+      gasLimit = gasLimitWithBuffer(gasEstimate) // estimate plus a safety buffer, hard-capped
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Gas estimate is outside the expected range.')
+      return
+    }
     setPhase('signing')
     try {
       const hash = await deployContract(connectorClient, {
         abi: ABI,
         bytecode: CREATION_BYTECODE,
         chain: arc,
-        gas: gasEstimate,
+        gas: gasLimit,
       })
       // Persist the submitted hash immediately: from here the outcome is owned
       // by the chain, and the page must never allow a resubmission while it is
       // unknown.
       setTxHash(hash)
+      persist(hash, 'pending')
       setPhase('pending')
       toast.info('Transaction submitted. Waiting for the receipt...')
       await checkReceipt(hash)
@@ -207,7 +268,7 @@ export function DeployPage() {
       setPhase('review')
       toast.error(err instanceof Error ? err.message : 'Deployment failed.')
     }
-  }, [connectorClient, address, chainId, phase, deployerCheck, usdcCheck, gasEstimate, checkReceipt])
+  }, [connectorClient, address, chainId, phase, deployerCheck, usdcCheck, gasEstimate, checkReceipt, persist])
 
   // Revalidated on every render, so an account/network switch after the checks
   // re-disables the button immediately.
@@ -274,8 +335,8 @@ export function DeployPage() {
             <InfoRow label="Arc USDC">{checkText(usdcCheck, `${USDC_ADDRESS} (6 decimals expected)`)}</InfoRow>
             <InfoRow label="Gas estimate">
               {gasEstimate
-                ? `${gasEstimate.toString()} gas (about ${formatUnits(gasEstimate * 25_000_000_000n, 18)} USDC at 25 gwei)`
-                : 'Not checked'}
+                ? `${gasEstimate.toString()} gas estimated (about ${formatUnits(gasEstimate * 25_000_000_000n, 18)} USDC at 25 gwei). Limit sent: ${gasLimitWithBuffer(gasEstimate).toString()} (+${GAS_BUFFER_PERCENT}% buffer; unused gas is not charged).`
+                : (gasProblem ?? 'Not checked')}
             </InfoRow>
             <InfoRow label="Creation bytecode">
               <span className="font-mono text-sm">
@@ -356,12 +417,40 @@ export function DeployPage() {
         )}
       </Card>
 
+      {saved && phase !== 'signing' && (
+        <Card>
+          <CardHeader
+            title="Saved deployment"
+            description="Progress is kept in this browser so a reload does not lose it. Only the transaction hash, phase and resulting contract address are stored."
+          />
+          <Button variant="secondary" onClick={() => setConfirmClear(true)}>
+            <Trash2 className="size-4" /> Clear saved deployment
+          </Button>
+        </Card>
+      )}
+
+      <ConfirmDialog
+        open={confirmClear}
+        title="Clear saved deployment?"
+        description={
+          phase === 'deployed'
+            ? 'This only forgets the record in this browser. The contract stays on-chain, and deploying again would create a second, separate contract.'
+            : phase === 'pending'
+              ? 'The transaction may still land on-chain. Clearing stops this page from tracking it and does not cancel it; deploying again could create a second contract.'
+              : 'This clears the saved failure notice from this browser.'
+        }
+        confirmLabel="Clear saved deployment"
+        tone="destructive"
+        onConfirm={clearState}
+        onCancel={() => setConfirmClear(false)}
+      />
+
       <Card>
         <CardHeader
           title="What this page will never do"
           description="Safety invariants of this deployment flow."
         />
-        <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+        <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground [overflow-wrap:anywhere]">
           <li>It never asks for a private key or recovery phrase: signing happens inside your wallet.</li>
           <li>It refuses to run if the connected wallet is not {EXPECTED_DEPLOYER}.</li>
           <li>It refuses to run on any chain except Arc Mainnet (5042).</li>
