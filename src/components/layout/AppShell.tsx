@@ -137,7 +137,7 @@ export function AppShell({ nav, activeId, onNavigate, sidebarFooter, topBarActio
             <footer className="mt-10 border-t border-line px-4 py-6 text-support text-ink-soft sm:px-6 md:px-8">
               <p>{BRAND.name} — {BRAND.tagline}</p>
               <p className="mt-1">
-                Runs on Arc. USDC spending limits enforced by smart contract.
+                Built for Arc. USDC spending limits enforced by smart contract.
                 <a className="ml-2 underline hover:text-ink" href={BRAND.repoUrl} target="_blank" rel="noreferrer">Source</a>
               </p>
             </footer>
