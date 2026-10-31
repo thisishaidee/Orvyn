@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {USDC_ADDRESS} from "./AgentPayConfig.sol";
@@ -41,6 +42,10 @@ contract AgentPay is ReentrancyGuard {
     /// @notice Per-lease recipient permissions, enforced only when enabled.
     mapping(uint256 => mapping(address => bool)) public allowedRecipients;
 
+    error UnsupportedChain(uint256 actualChainId);
+    error UsdcNotDeployed(address token);
+    error UsdcMetadataCallFailed(address token);
+    error UsdcUnexpectedDecimals(uint256 actualDecimals);
     error LeaseNotFound(uint256 leaseId);
     error NotLeaseOwner(uint256 leaseId);
     error NotDelegate(uint256 leaseId);
@@ -70,6 +75,23 @@ contract AgentPay is ReentrancyGuard {
     event Withdrawn(uint256 indexed leaseId, address indexed owner, uint256 amount);
     event Deposited(uint256 indexed leaseId, address indexed owner, uint256 amount);
     event AllowlistUpdated(uint256 indexed leaseId, address indexed recipient, bool allowed);
+
+    /// @dev AgentPay is only deployable on Arc Mainnet and Arc Testnet. Validate
+    /// the configured ERC-20 before storing it as the protocol token.
+    constructor() {
+        if (block.chainid != 5042 && block.chainid != 5042002) {
+            revert UnsupportedChain(block.chainid);
+        }
+        if (USDC_ADDRESS.code.length == 0) revert UsdcNotDeployed(USDC_ADDRESS);
+
+        (bool success, bytes memory result) = USDC_ADDRESS.staticcall(
+            abi.encodeCall(IERC20Metadata.decimals, ())
+        );
+        if (!success || result.length < 32) revert UsdcMetadataCallFailed(USDC_ADDRESS);
+
+        uint256 actualDecimals = abi.decode(result, (uint256));
+        if (actualDecimals != 6) revert UsdcUnexpectedDecimals(actualDecimals);
+    }
 
     /// @notice Create a lease owned by the caller, optionally funding it atomically.
     /// @dev Approve this contract for initialDeposit first. The first period starts
