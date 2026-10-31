@@ -31,6 +31,7 @@ The frontend supports Arc Mainnet and Arc Testnet only. Do not add Ethereum as a
 - `contracts/AgentPayConfig.sol`: USDC ERC-20 address.
 - `contracts/test/`: Foundry tests.
 - `contracts/script/DeployAgentPayTestnet.s.sol`: Arc Testnet deployment script with chain, deployer, USDC, and post-deployment checks.
+- `contracts/script/DeployAgentPayMainnet.s.sol`: Arc Mainnet deployment script with chain, deployer, USDC, and post-deployment checks.
 - `src/config.ts`: supported Arc chains and wallet configuration.
 - `src/lib/agentpay-abi.ts` and `src/lib/agentpay-write-abi.ts`: contract ABIs.
 - `src/lib/agentpay-reads.ts`: lease and activity reads.
@@ -52,7 +53,7 @@ forge test
 ## Deployment and security rules
 
 - Do not claim that AgentPay is deployed unless the address and transaction are verified on the correct Arc explorer.
-- The testnet deployment script requires `DEPLOYER_PRIVATE_KEY` and `DEPLOYER_ADDRESS` as local environment variables. The key must remain in a local git-ignored `.env` file.
+- Both deployment scripts require `DEPLOYER_PRIVATE_KEY` and `DEPLOYER_ADDRESS` as local environment variables. The key must remain in a local git-ignored `.env` file.
 - Never request, display, commit, or transmit private keys, seed phrases, recovery phrases, or `.env` contents.
 - Never broadcast a deployment or submit a wallet transaction without the user's explicit instruction and a final network/transaction review.
 - A Foundry simulation without `--broadcast` is not a deployment.
