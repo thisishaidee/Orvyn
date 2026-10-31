@@ -7,7 +7,7 @@ import { BRAND } from '@/lib/brand'
 import { walletConnectEnabled } from '@/config'
 import { shortAddress } from '@/lib/agentpay'
 import { useNetworkInfo } from '@/lib/wallet'
-import { getAgentPayAddress, agentPayAddressEnvVar } from '@/lib/agentpay-address'
+import { getAgentPayAddress } from '@/lib/agentpay-address'
 
 function Section({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
   return (
@@ -97,7 +97,7 @@ export function SettingsPage() {
           <InfoRow label="Product">{BRAND.name}</InfoRow>
           <InfoRow label="Purpose">{BRAND.tagline}</InfoRow>
           <InfoRow label="Stage">Prototype. The product name is temporary.</InfoRow>
-          <InfoRow label="Contract">{contractAddress ? <span className="num font-mono text-support" title={contractAddress}>{shortAddress(contractAddress)}</span> : <>Not configured{agentPayAddressEnvVar(network.chainId) ? ` · set ${agentPayAddressEnvVar(network.chainId)} after deployment` : ''}</>}</InfoRow>
+          <InfoRow label="Contract">{contractAddress ? <span className="num font-mono text-support" title={contractAddress}>{shortAddress(contractAddress)}</span> : <>Not configured</>}</InfoRow>
           <InfoRow label="Wallet connections">
             Browser wallets, Coinbase Wallet{walletConnectEnabled ? ', WalletConnect' : ' (WalletConnect not configured)'}
           </InfoRow>

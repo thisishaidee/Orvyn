@@ -76,7 +76,11 @@ export function CreateLeaseModal({ open, onClose, onCreated }: {
   return (
     <Modal open={open} onClose={close} dismissible={!busy} size="md"
       title="Create a lease"
-      description="Define the agent, spending cap, period and expiry. This creates an unfunded lease.">
+      description="Define the agent, spending cap, period and expiry. This creates an unfunded lease."
+      footer={<>
+        <Button variant="secondary" onClick={close} disabled={busy}>Cancel</Button>
+        <Button onClick={() => void submit()} loading={busy} disabled={tx.state !== 'ready'}>Create lease</Button>
+      </>}>
       <div className="space-y-4">
         {tx.state !== 'ready' && <Notice tone="warning" title="Transactions unavailable">{tx.reason || 'Connect a wallet and configure a deployed AgentPay address.'}</Notice>}
         <Field label="Agent wallet address">
@@ -98,10 +102,6 @@ export function CreateLeaseModal({ open, onClose, onCreated }: {
           <span><strong className="font-medium">Restrict recipients</strong><span className="mt-0.5 block text-support text-ink-soft">Only recipients you approve later can receive payments.</span></span>
         </label>
         {error && <Notice tone="danger" title="Could not create lease">{error}</Notice>}
-        <div className="flex justify-end gap-2 border-t border-line pt-4">
-          <Button variant="secondary" onClick={close} disabled={busy}>Cancel</Button>
-          <Button onClick={() => void submit()} loading={busy} disabled={tx.state !== 'ready'}>Create lease</Button>
-        </div>
       </div>
     </Modal>
   )
