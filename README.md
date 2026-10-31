@@ -55,6 +55,14 @@ Deployment requires Foundry, an Arc Testnet RPC endpoint, and a deployer wallet 
 
 A simulation without `--broadcast` does not deploy anything. Only use `--broadcast` after reviewing the contract, network, deployer, and transaction details yourself. After deployment, verify the contract address and transaction on the Arc Testnet explorer before setting `VITE_AGENTPAY_ADDRESS_TESTNET`.
 
+## Arc Mainnet deployment
+
+The repository includes `contracts/script/DeployAgentPayMainnet.s.sol`, which checks chain ID `5042`, verifies the deployer address matches the supplied local private key, checks that the configured USDC contract has bytecode and reports six decimals, and performs post-deployment checks.
+
+Deployment requires Foundry, an Arc Mainnet RPC endpoint, and a deployer wallet funded for Arc gas. Keep `DEPLOYER_PRIVATE_KEY` in a local, git-ignored `.env` file. Never paste a seed phrase or private key into chat, Arc Studio, or a repository.
+
+A simulation without `--broadcast` does not deploy anything. Mainnet deployment is a real transaction: do not use `--broadcast` until the contract, chain, deployer, USDC address, gas settings, and transaction details have been independently reviewed and explicitly approved. After deployment, verify the contract address and transaction on the Arc Mainnet explorer before setting `VITE_AGENTPAY_ADDRESS_MAINNET`.
+
 ## Current deployment status
 
 The repository's frontend and contract code are prepared for Arc networks, but this documentation does not assert that AgentPay has been deployed. Add a verified deployment address and transaction reference here only after a real deployment has been completed and checked.
