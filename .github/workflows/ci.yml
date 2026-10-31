@@ -41,3 +41,27 @@ jobs:
       - name: Run contract tests
         run: forge test -vvv
         
+
+  frontend:
+    name: Typecheck and build frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Typecheck frontend
+        run: bun run typecheck
+
+      - name: Run frontend unit tests
+        run: bun test
+
+      - name: Build frontend
+        run: bun run build

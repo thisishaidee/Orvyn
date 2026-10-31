@@ -1,55 +1,72 @@
-AgentPay: a USDC spending lease protocol for AI agents on Arc mainnet (chain 5042).
-
 # AgentPay
 
-AgentPay is a Solidity contract for Arc that lets an owner lease a capped, expiring USDC spending allowance to an AI agent. The agent can spend only within its per-period cap, and the owner can revoke or withdraw at any time.
+AgentPay is a USDC spending-lease application for AI-agent delegates on Arc. A wallet owner creates a lease with a delegate, a per-period spending cap, an expiry, and an optional recipient allowlist. The delegate can spend within those rules; the owner can add funds, update recipient permissions, revoke the lease, or withdraw the remaining balance.
 
-Built with [Arc Studio](https://studio.arc.io)
+Built with [Arc Studio](https://studio.arc.io).
 
-## Tech stack
+## Networks
 
-- Solidity 0.8.28 (Cancun), OpenZeppelin Contracts
-- Foundry for build and tests
-- Vite + React + TypeScript starter app (no UI for the contract yet)
+- Arc Mainnet — chain ID `5042`
+- Arc Testnet — chain ID `5042002`
 
-## Development
+The frontend supports these two Arc networks only. Ethereum is not a supported AgentPay network.
 
-Prerequisites: Foundry and bun.
+The configured USDC ERC-20 address is `0x3600000000000000000000000000000000000000` with 6 decimals. The contract and deployment scripts verify that the token contract exists and reports the expected decimals before deployment.
 
-Install:
+## Stack
 
-```
+- Solidity 0.8.20-compatible contract source and OpenZeppelin
+- Foundry for contract builds, tests, and deployment scripts
+- React, Vite, TypeScript, Tailwind CSS
+- wagmi and viem for wallet connection, reads, and wallet-confirmed transactions
+
+## Frontend setup
+
+Prerequisites: Bun.
+
+```bash
 bun install
-```
-
-Configure the USDC address in `contracts/AgentPayConfig.sol`. It is set from Arc Studio's registry for Arc mainnet. Verify it against Arc's official documentation before any mainnet deployment, because it cannot be changed after deployment.
-
-Build and test the contracts:
-
-```
-forge build
-forge test --match-path 'contracts/test/AgentPay.*t.sol'
-```
-
-Run the starter app:
-
-```
 bun run dev
 ```
 
-### Environment variables
+The app can connect external wallets and switch between Arc Mainnet and Arc Testnet. Contract reads and transaction actions require a real AgentPay deployment address for the selected network.
 
-Only needed to deploy. Copy `.env.example` to `.env` on your own machine and never commit it.
+Set these frontend variables only after deploying the contract:
 
-- `DEPLOYER_PRIVATE_KEY`: private key of the wallet that deploys.
-- `DEPLOYER_ADDRESS`: public address of that wallet, checked against the key.
-- `ARC_MAINNET_RPC_URL`: Arc mainnet RPC endpoint.
-- `ARC_MAX_FEE_WEI`, `ARC_PRIORITY_FEE_WEI`: gas settings in wei.
+- `VITE_AGENTPAY_ADDRESS_MAINNET`
+- `VITE_AGENTPAY_ADDRESS_TESTNET`
 
-## Mainnet
+Leave them empty until a deployment has been independently verified. The app intentionally does not invent or hardcode a contract address.
 
-Mainnet deployment is not performed by Arc Studio. Review, audit, and deploy from your own wallet. Step-by-step commands are in `docs/deploy-agentpay-mainnet.md`.
+## Build and test
+
+```bash
+bun run typecheck
+bun run build
+forge build
+forge test
+```
+
+## Arc Testnet deployment
+
+The repository includes `contracts/script/DeployAgentPayTestnet.s.sol`, which checks chain ID `5042002`, verifies the deployer address matches the supplied local private key, checks the USDC contract and its decimals, and performs post-deployment checks.
+
+Deployment requires Foundry, an Arc Testnet RPC endpoint, and a deployer wallet funded for testnet gas. Keep `DEPLOYER_PRIVATE_KEY` in a local, git-ignored `.env` file. Never paste a seed phrase or private key into chat, Arc Studio, or a repository.
+
+A simulation without `--broadcast` does not deploy anything. Only use `--broadcast` after reviewing the contract, network, deployer, and transaction details yourself. After deployment, verify the contract address and transaction on the Arc Testnet explorer before setting `VITE_AGENTPAY_ADDRESS_TESTNET`.
+
+## Arc Mainnet deployment
+
+The repository includes `contracts/script/DeployAgentPayMainnet.s.sol`, which checks chain ID `5042`, verifies the deployer address matches the supplied local private key, checks that the configured USDC contract has bytecode and reports six decimals, and performs post-deployment checks.
+
+Deployment requires Foundry, an Arc Mainnet RPC endpoint, and a deployer wallet funded for Arc gas. Keep `DEPLOYER_PRIVATE_KEY` in a local, git-ignored `.env` file. Never paste a seed phrase or private key into chat, Arc Studio, or a repository.
+
+A simulation without `--broadcast` does not deploy anything. Mainnet deployment is a real transaction: do not use `--broadcast` until the contract, chain, deployer, USDC address, gas settings, and transaction details have been independently reviewed and explicitly approved. After deployment, verify the contract address and transaction on the Arc Mainnet explorer before setting `VITE_AGENTPAY_ADDRESS_MAINNET`.
+
+## Current deployment status
+
+The repository's frontend and contract code are prepared for Arc networks, but this documentation does not assert that AgentPay has been deployed. Add a verified deployment address and transaction reference here only after a real deployment has been completed and checked.
 
 ## Third-party code
 
-`lib/forge-std` is a vendored copy of Foundry's standard test library (MIT or Apache-2.0, see the license files in that folder). Its own test files contain the publicly known default Anvil/Hardhat development account key. That key is for local testing only, is not a secret, is not used by AgentPay, and must never hold real funds. Secret scanners may flag it; that is expected.
+`lib/forge-std` contains Foundry's standard test library. Its development-only test accounts and keys are not AgentPay credentials and must never hold real funds.

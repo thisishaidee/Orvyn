@@ -25,3 +25,4 @@ broadcast/
 
 # Local-only notes (kept out of the public repo)
 docs/agentpay-audit-report.md
+audit-prod.json
