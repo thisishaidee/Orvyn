@@ -10,6 +10,7 @@ contract WrongDecimalsToken {
         return 18;
     }
 }
+contract MissingDecimalsToken {}
 
 contract AgentPayCreateTest is AgentPayTestBase {
     function test_ConstructorAcceptsArcTestnet() public {
@@ -40,6 +41,15 @@ contract AgentPayCreateTest is AgentPayTestBase {
         WrongDecimalsToken wrongToken = new WrongDecimalsToken();
         vm.etch(USDC_ADDRESS, address(wrongToken).code);
         vm.expectRevert(abi.encodeWithSelector(AgentPay.UsdcUnexpectedDecimals.selector, 18));
+        new AgentPay();
+    }
+
+    function test_ConstructorRejectsMissingUsdcDecimalsMetadata() public {
+        MissingDecimalsToken missingMetadata = new MissingDecimalsToken();
+        vm.etch(USDC_ADDRESS, address(missingMetadata).code);
+        vm.expectRevert(
+            abi.encodeWithSelector(AgentPay.UsdcMetadataCallFailed.selector, USDC_ADDRESS)
+        );
         new AgentPay();
     }
 
