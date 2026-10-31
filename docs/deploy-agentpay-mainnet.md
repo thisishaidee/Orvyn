@@ -56,7 +56,7 @@ No `--broadcast`, so nothing is sent. The script also checks the chain ID, that 
 derives `DEPLOYER_ADDRESS`, and that the configured USDC address has code and 6 decimals.
 
 ```bash
-arc-forge script contracts/script/DeployAgentPay.s.sol:DeployAgentPay \
+arc-forge script contracts/script/DeployAgentPayMainnet.s.sol:DeployAgentPayMainnet \
   --rpc-url "$ARC_MAINNET_RPC_URL" \
   --chain-id 5042 \
   --with-gas-price "$ARC_MAX_FEE_WEI" \
@@ -80,7 +80,7 @@ Terminal 2 (give the deployer fake balance on the fork only; 1 USDC = 1e18 in th
 ```bash
 set -a; source .env; set +a
 arc-cast rpc anvil_setBalance "$DEPLOYER_ADDRESS" 0xDE0B6B3A7640000 --rpc-url http://127.0.0.1:8545
-arc-forge script contracts/script/DeployAgentPay.s.sol:DeployAgentPay \
+arc-forge script contracts/script/DeployAgentPayMainnet.s.sol:DeployAgentPayMainnet \
   --rpc-url http://127.0.0.1:8545 \
   --chain-id 5042 \
   --with-gas-price "$ARC_MAX_FEE_WEI" \
@@ -96,7 +96,7 @@ This broadcasts only to your local fork. Stop `arc-anvil` afterward. If the scri
 Only run this after steps 1 to 3 pass and you have reviewed the contract and config.
 
 ```bash
-arc-forge script contracts/script/DeployAgentPay.s.sol:DeployAgentPay \
+arc-forge script contracts/script/DeployAgentPayMainnet.s.sol:DeployAgentPayMainnet \
   --rpc-url "$ARC_MAINNET_RPC_URL" \
   --chain-id 5042 \
   --with-gas-price "$ARC_MAX_FEE_WEI" \
@@ -105,7 +105,7 @@ arc-forge script contracts/script/DeployAgentPay.s.sol:DeployAgentPay \
 ```
 
 Copy the `AgentPay:` address it prints (also saved in
-`broadcast/DeployAgentPay.s.sol/5042/run-latest.json`), then set it in your shell:
+`broadcast/DeployAgentPayMainnet.s.sol/5042/run-latest.json`), then set it in your shell:
 `AGENTPAY_ADDRESS`:
 
 ```bash
