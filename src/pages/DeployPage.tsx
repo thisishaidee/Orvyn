@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { CheckCircle2, ExternalLink, FileCheck, Rocket, ShieldAlert, XCircle } from 'lucide-react'
 import { arc } from 'viem/chains'
 import { createPublicClient, erc20Abi, formatUnits, http, keccak256 } from 'viem'
@@ -9,9 +9,21 @@ import { Badge, Button, Card, CardHeader, Notice, PageHeader } from '@/component
 import { InfoList, InfoRow } from '@/components/agentpay/Notices'
 import { NetworkSwitcher } from '@/components/wallet/NetworkSwitcher'
 import artifact from '@/lib/agentpay-artifact.generated.json'
+import {
+  ARC_MAINNET_CHAIN_ID,
+  canStartDeployment,
+  checksStale,
+  classifyReceiptError,
+  classifyReceiptStatus,
+  EXPECTED_DEPLOYER as EXPECTED_DEPLOYER_CONST,
+  type DeployPhase,
+  type ReceiptOutcome,
+  type SafetyCheck,
+} from '@/lib/agentpay-deploy'
 
-// Expected deployer for mainnet deployments. The page refuses to run otherwise.
-const EXPECTED_DEPLOYER = '0xCB2A51B4D34cC6f5dd574F7b5BfA8260E4201C55'
+// Expected deployer for mainnet deployments: revalidated on every render and
+// again immediately before submission.
+const EXPECTED_DEPLOYER = EXPECTED_DEPLOYER_CONST
 const ARC_MAINNET_RPC = 'https://rpc.mainnet.arc.io'
 // Arc mainnet USDC (per docs.arc.io contract addresses and AgentPayConfig.sol).
 const USDC_ADDRESS = '0x3600000000000000000000000000000000000000'
@@ -34,12 +46,10 @@ function checkText(state: CheckState, fallback: string): string {
 const ABI = artifact.abi as never[]
 const CREATION_BYTECODE = artifact.bytecode as `0x${string}`
 
-type Phase = 'review' | 'signing' | 'deployed'
 
-type CheckState =
-  | { status: 'idle' | 'checking' }
-  | { status: 'ok'; detail: string }
-  | { status: 'fail'; detail: string }
+
+type CheckState = SafetyCheck
+type Phase = DeployPhase
 
 export function DeployPage() {
   const { address, isConnected, chainId } = useAccount()
@@ -53,8 +63,21 @@ export function DeployPage() {
   const [txHash, setTxHash] = useState<`0x${string}` | undefined>()
   const [deployedAddress, setDeployedAddress] = useState<`0x${string}` | undefined>()
   const [postCheck, setPostCheck] = useState<CheckState>({ status: 'idle' })
+  const [checkingReceipt, setCheckingReceipt] = useState(false)
+  const [failure, setFailure] = useState<string | undefined>()
 
   const bytecodeHash = useMemo(() => keccak256(CREATION_BYTECODE), [])
+
+  // A wallet account switch or network switch invalidates every passed check:
+  // MetaMask can change accounts between the safety checks and submission.
+  useEffect(() => {
+    if (checksStale({ phase, account: address, chainId, deployerCheck, usdcCheck, gasEstimate })) {
+      if (phase === 'signing') setPhase('review')
+      if (deployerCheck.status !== 'idle') setDeployerCheck({ status: 'idle' })
+      if (usdcCheck.status !== 'idle') setUsdcCheck({ status: 'idle' })
+      if (gasEstimate !== undefined) setGasEstimate(undefined)
+    }
+  }, [address, chainId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const onRightChain = chainId === arc.id
   const isDeployer = !!address && address.toLowerCase() === EXPECTED_DEPLOYER.toLowerCase()
@@ -95,8 +118,75 @@ export function DeployPage() {
   }, [address, isDeployer])
 
   // Deploy: wallet-only. The user confirms inside MetaMask; nothing is sent from here.
+  const checkReceipt = useCallback(async (hash: `0x${string}`) => {
+    setCheckingReceipt(true)
+    try {
+      const receipt = await mainnetClient.waitForTransactionReceipt({ hash })
+      const outcome = classifyReceiptStatus(receipt.status, receipt.contractAddress ?? undefined)
+      if (outcome.kind === 'reverted') {
+        // Conclusively failed: the only case that allows trying again.
+        setPhase('failed')
+        setFailure('The deployment transaction reverted on-chain. No contract was created; you may start a new deployment.')
+        return
+      }
+      if (outcome.kind === 'unknown') {
+        setFailure(`Receipt unclear: ${outcome.reason}`)
+        return
+      }
+      if (outcome.kind === 'pending') return
+      const contractAddress = outcome.contractAddress
+
+      try {
+        const runtime = await mainnetClient.getBytecode({ address: contractAddress })
+        if (!runtime || runtime === '0x') throw new Error('Deployed address has no code.')
+        const [usdc, nextLeaseId] = await Promise.all([
+          mainnetClient.readContract({ address: contractAddress, abi: ABI, functionName: 'USDC' }),
+          mainnetClient.readContract({ address: contractAddress, abi: ABI, functionName: 'nextLeaseId' }),
+        ])
+        if (usdc !== USDC_ADDRESS) throw new Error(`Contract USDC() is ${usdc}, expected ${USDC_ADDRESS}.`)
+        if (nextLeaseId !== 1n) throw new Error(`nextLeaseId() is ${nextLeaseId}, expected 1.`)
+        setDeployedAddress(contractAddress)
+        setPostCheck({ status: 'ok', detail: `USDC() and nextLeaseId() verified on ${contractAddress}.` })
+        setPhase('deployed')
+        toast.success('AgentPay deployed and verified')
+      } catch (verifyErr) {
+        // The transaction SUCCEEDED; verification is display-level only.
+        setDeployedAddress(contractAddress)
+        setPostCheck({ status: 'fail', detail: verifyErr instanceof Error ? verifyErr.message : 'Verification failed.' })
+        setPhase('deployed')
+        toast.warning('Deployed, but post-deploy verification failed. Check the contract on the explorer.')
+      }
+    } catch (err) {
+      const outcome: ReceiptOutcome = classifyReceiptError(err)
+      if (outcome.kind === 'pending') {
+        toast.info('Receipt not on-chain yet. You can retry the status check.')
+      } else if (outcome.kind === 'unknown') {
+        // Outcome unknown: never reset to review, never allow a resubmission.
+        setFailure(`Could not read the receipt (outcome unknown): ${outcome.reason}. The transaction may still land.`)
+        toast.error('Receipt check failed. The transaction may still be mined; retry the status check.')
+      }
+    } finally {
+      setCheckingReceipt(false)
+    }
+  }, [])
+
   const deploy = useCallback(async () => {
     if (!connectorClient || !address) return
+    // Revalidate the wallet identity and network immediately before submission:
+    // MetaMask may have switched accounts or chains since the checks ran.
+    if (
+      !canStartDeployment({
+        phase,
+        account: address,
+        chainId,
+        deployerCheck,
+        usdcCheck,
+        gasEstimate,
+      })
+    ) {
+      toast.error('Wallet or network changed since the checks. Run the checks again.')
+      return
+    }
     setPhase('signing')
     try {
       const hash = await deployContract(connectorClient, {
@@ -105,35 +195,30 @@ export function DeployPage() {
         chain: arc,
         gas: gasEstimate,
       })
+      // Persist the submitted hash immediately: from here the outcome is owned
+      // by the chain, and the page must never allow a resubmission while it is
+      // unknown.
       setTxHash(hash)
+      setPhase('pending')
       toast.info('Transaction submitted. Waiting for the receipt...')
-
-      const receipt = await mainnetClient.waitForTransactionReceipt({ hash })
-      if (receipt.status !== 'success') throw new Error(`Deployment reverted (status ${receipt.status}).`)
-      const contractAddress = receipt.contractAddress
-      if (!contractAddress) throw new Error('Receipt has no contract address.')
-
-      const runtime = await mainnetClient.getBytecode({ address: contractAddress })
-      if (!runtime || runtime === '0x') throw new Error('Deployed address has no code.')
-
-      const [usdc, nextLeaseId] = await Promise.all([
-        mainnetClient.readContract({ address: contractAddress, abi: ABI, functionName: 'USDC' }),
-        mainnetClient.readContract({ address: contractAddress, abi: ABI, functionName: 'nextLeaseId' }),
-      ])
-      if (usdc !== USDC_ADDRESS) throw new Error(`Contract USDC() is ${usdc}, expected ${USDC_ADDRESS}.`)
-      if (nextLeaseId !== 1n) throw new Error(`nextLeaseId() is ${nextLeaseId}, expected 1.`)
-
-      setDeployedAddress(contractAddress)
-      setPostCheck({ status: 'ok', detail: `USDC() and nextLeaseId() verified on ${contractAddress}.` })
-      setPhase('deployed')
-      toast.success('AgentPay deployed and verified')
+      await checkReceipt(hash)
     } catch (err) {
+      // The wallet rejected or the submission failed: no transaction exists.
       setPhase('review')
       toast.error(err instanceof Error ? err.message : 'Deployment failed.')
     }
-  }, [connectorClient, address, gasEstimate])
+  }, [connectorClient, address, chainId, phase, deployerCheck, usdcCheck, gasEstimate, checkReceipt])
 
-  const allChecksPass = deployerCheck.status === 'ok' && usdcCheck.status === 'ok' && !!gasEstimate
+  // Revalidated on every render, so an account/network switch after the checks
+  // re-disables the button immediately.
+  const allChecksPass = canStartDeployment({
+    phase,
+    account: address,
+    chainId,
+    deployerCheck,
+    usdcCheck,
+    gasEstimate,
+  })
 
   return (
     <div className="space-y-6 md:space-y-8">
@@ -236,6 +321,26 @@ export function DeployPage() {
           <div className="space-y-3">
             {phase === 'signing' && (
               <Notice tone="info">Waiting for you to confirm in MetaMask, then for the receipt...</Notice>
+            )}
+            {phase === 'pending' && txHash && (
+              <div className="space-y-3">
+                <Notice tone="info" title="Deployment submitted, outcome unknown yet">
+                  The transaction is on its way. Do not submit another one; check its status instead.
+                </Notice>
+                <InfoList>
+                  <InfoRow label="Transaction">
+                    <a className="inline-flex items-center gap-1 underline" href={`${EXPLORER}/tx/${txHash}`} target="_blank" rel="noreferrer">
+                      {txHash.slice(0, 14)}... <ExternalLink className="size-3.5" />
+                    </a>
+                  </InfoRow>
+                </InfoList>
+                <Button variant="secondary" onClick={() => checkReceipt(txHash)} disabled={checkingReceipt}>
+                  {checkingReceipt ? 'Checking...' : 'Retry status check'}
+                </Button>
+              </div>
+            )}
+            {failure && (
+              <Notice tone="danger" title="Deployment outcome">{failure}</Notice>
             )}
             <Button
               variant="primary"
