@@ -1,156 +1,81 @@
-# Deploy AgentPay to Arc mainnet
+# Deploy AgentPay to Arc Mainnet
 
-Run everything below on your own machine, from the project root, with your own wallet.
-Arc Studio does not deploy to mainnet and never needs your private key. Do not put the key
-in this sandbox or in chat.
+This guide uses the Ledger-based deployment script. **Never put a recovery phrase or private key in chat, GitHub, a project agent, or a committed file.** The old `DEPLOYER_PRIVATE_KEY` instructions are obsolete.
 
-Legend: FREE = reads or simulates only, spends nothing. REAL GAS = broadcasts a transaction.
+## Network and contract configuration
 
-Arc Foundry (`arc-forge`, `arc-cast`, `arc-anvil`) is Arc's fork of Foundry that handles
-Arc's runtime differences. Install it first:
-https://docs.arc.io/arc/tutorials/install-arc-foundry.md
+- Arc Mainnet chain ID: `5042`
+- RPC: `https://rpc.mainnet.arc.io`
+- AgentPay USDC ERC-20: `0x3600000000000000000000000000000000000000`
+- USDC ERC-20 decimals: `6`
+- Expected deployer: `0xCB2A51B4D34cC6f5dd574F7b5BfA8260E4201C55`
 
-Gas on Arc is USDC (18-decimal native view, 6-decimal ERC-20 view of the same balance).
-`maxFeePerGas` must be at least 20 gwei. `.env.example` sets a 30 gwei cap and a 1 gwei tip,
-in wei. The cap is a ceiling, not what you pay.
+The deployment script checks the chain ID, expected deployer, USDC bytecode and decimals before deployment. It also checks the deployed contract's USDC pointer and initial lease ID.
 
-I wrote these commands but did not run them. Flag names come from Foundry; if
-`arc-forge script --help` rejects one, use its equivalent.
+## 1. Build and test (no transaction)
 
-## 0. Setup (FREE)
+Run in a trusted environment with the repository checked out at current `main`:
 
 ```bash
-cp .env.example .env
-chmod 600 .env
-# Edit .env: fill in DEPLOYER_PRIVATE_KEY and DEPLOYER_ADDRESS.
-set -a; source .env; set +a
+bun install --frozen-lockfile
+forge build
+forge test
+bun run typecheck
+bun test
+bun run build
 ```
 
-`DEPLOYER_PRIVATE_KEY` is the only variable that takes the private key. Never commit `.env`.
-`.gitignore` already excludes `.env` and `.env.*` (but keeps `.env.example`).
+GitHub Actions runs these checks on pushes and pull requests to `main`.
 
-Before anything else, open `contracts/AgentPayConfig.sol` and confirm the USDC address
-against Arc's official contract addresses page: https://docs.arc.io/arc/references/contract-addresses.md
-It is a constant and cannot be changed after deployment.
+## 2. Read-only Arc Mainnet checks (no transaction)
 
-## 1. Build and test (FREE)
+The GitHub Actions workflow `.github/workflows/arc-preflight.yml` checks the Arc RPC chain ID and the configured USDC contract bytecode/decimals. It does not connect a wallet, sign, or broadcast.
+
+## 3. Confirm Ledger support and address (no transaction)
+
+Use Arc Foundry as documented by Arc: https://docs.arc.io/arc/tutorials/install-arc-foundry.md
+
+Before proceeding, confirm that the installed `arc-forge script --help` explicitly lists both `--ledger` and `--sender`. Do not assume ordinary Foundry flags are supported by every Arc Foundry build.
+
+Connect and unlock the Ledger, open its Ethereum app, and derive the public address using the supported Arc Foundry/Cast Ledger command. It must exactly match:
+
+```text
+0xCB2A51B4D34cC6f5dd574F7b5BfA8260E4201C55
+```
+
+If the address differs, stop. Do not change the script's hardcoded address just to make the command pass. Never enter a recovery phrase into a terminal or website.
+
+Set only the public environment values required by the script:
 
 ```bash
-arc-forge build
-arc-forge test --match-path 'contracts/test/AgentPay.*t.sol'
+export ARC_MAINNET_RPC_URL=https://rpc.mainnet.arc.io
+export DEPLOYER_ADDRESS=0xCB2A51B4D34cC6f5dd574F7b5BfA8260E4201C55
 ```
 
-## 2. Pre-flight read-only checks (FREE)
+Do not source an old `.env` file that may contain the previously exposed private key.
 
-```bash
-arc-cast chain-id --rpc-url "$ARC_MAINNET_RPC_URL"                 # expect 5042
-arc-cast gas-price --rpc-url "$ARC_MAINNET_RPC_URL"                # expect >= 20 gwei (20000000000)
-arc-cast balance "$DEPLOYER_ADDRESS" --ether --rpc-url "$ARC_MAINNET_RPC_URL"   # deployer's USDC for gas
-```
+## 4. Simulate only (no transaction)
 
-If the gas price is above `ARC_MAX_FEE_WEI`, raise `ARC_MAX_FEE_WEI` in `.env` and re-source it.
-
-## 3. Simulate against mainnet state (FREE)
-
-No `--broadcast`, so nothing is sent. The script also checks the chain ID, that your key
-derives `DEPLOYER_ADDRESS`, and that the configured USDC address has code and 6 decimals.
-
-```bash
-arc-forge script contracts/script/DeployAgentPayMainnet.s.sol:DeployAgentPayMainnet \
-  --rpc-url "$ARC_MAINNET_RPC_URL" \
-  --chain-id 5042 \
-  --with-gas-price "$ARC_MAX_FEE_WEI" \
-  --priority-gas-price "$ARC_PRIORITY_FEE_WEI"
-```
-
-Read the output: "Script ran successfully", the logged deployer and USDC addresses, and the
-estimated gas and amount required. Do not add `-vvv` or higher; traces can print cheatcode
-return values, which could include your key.
-
-## 4. Optional: rehearse on a local fork of mainnet (FREE)
-
-Terminal 1:
-
-```bash
-arc-anvil --fork-url "$ARC_MAINNET_RPC_URL"
-```
-
-Terminal 2 (give the deployer fake balance on the fork only; 1 USDC = 1e18 in the native view):
-
-```bash
-set -a; source .env; set +a
-arc-cast rpc anvil_setBalance "$DEPLOYER_ADDRESS" 0xDE0B6B3A7640000 --rpc-url http://127.0.0.1:8545
-arc-forge script contracts/script/DeployAgentPayMainnet.s.sol:DeployAgentPayMainnet \
-  --rpc-url http://127.0.0.1:8545 \
-  --chain-id 5042 \
-  --with-gas-price "$ARC_MAX_FEE_WEI" \
-  --priority-gas-price "$ARC_PRIORITY_FEE_WEI" \
-  --broadcast
-```
-
-This broadcasts only to your local fork. Stop `arc-anvil` afterward. If the script reports
-`WrongChain`, the fork is not reporting chain ID 5042; skip this step.
-
-## 5. REAL DEPLOY (REAL GAS, irreversible)
-
-Only run this after steps 1 to 3 pass and you have reviewed the contract and config.
+Only after Ledger address verification and after confirming the Arc Foundry help output supports the Ledger flags, run the script **without** `--broadcast`:
 
 ```bash
 arc-forge script contracts/script/DeployAgentPayMainnet.s.sol:DeployAgentPayMainnet \
   --rpc-url "$ARC_MAINNET_RPC_URL" \
   --chain-id 5042 \
-  --with-gas-price "$ARC_MAX_FEE_WEI" \
-  --priority-gas-price "$ARC_PRIORITY_FEE_WEI" \
-  --broadcast
+  --ledger \
+  --sender "$DEPLOYER_ADDRESS"
 ```
 
-Copy the `AgentPay:` address it prints (also saved in
-`broadcast/DeployAgentPayMainnet.s.sol/5042/run-latest.json`), then set it in your shell:
-`AGENTPAY_ADDRESS`:
+If Arc Foundry requires additional gas flags, first inspect its help and current Arc fee requirements. Do not add `--broadcast`. Review the simulated deployer, chain, USDC address, gas estimate and resulting contract address.
 
-```bash
-export AGENTPAY_ADDRESS=0x...   # the address the script printed
-```
+## 5. Mainnet deployment (real gas; irreversible)
 
-## 6. Post-deploy checks (FREE)
+**Do not deploy until the simulation is successful, the estimated cost is reviewed, and the owner explicitly approves the transaction.** Only then may `--broadcast` be added to the verified command and the Ledger transaction reviewed on-device. Never approve a transaction whose network, destination, or value differs from the reviewed simulation.
 
-```bash
-USDC=$(grep -oE '0x[0-9a-fA-F]{40}' contracts/AgentPayConfig.sol | head -1)
-echo "USDC from AgentPayConfig.sol: $USDC"
+## 6. Verify after deployment
 
-# Code exists at the address (output should be long hex, not 0x)
-arc-cast code "$AGENTPAY_ADDRESS" --rpc-url "$ARC_MAINNET_RPC_URL"
+After an explicitly approved deployment, verify the transaction and contract on https://explorer.arc.io. Read-only checks should confirm that contract bytecode exists, `USDC()` returns the configured USDC address, and `nextLeaseId()` returns `1`.
 
-# The contract points at the same USDC as AgentPayConfig.sol (compare ignoring case)
-arc-cast call "$AGENTPAY_ADDRESS" "USDC()(address)" --rpc-url "$ARC_MAINNET_RPC_URL"
+## Security note
 
-# Fresh contract: next lease id is 1
-arc-cast call "$AGENTPAY_ADDRESS" "nextLeaseId()(uint256)" --rpc-url "$ARC_MAINNET_RPC_URL"
-
-# remainingAllowance on a lease id that does not exist yet: expect 0
-arc-cast call "$AGENTPAY_ADDRESS" "remainingAllowance(uint256)(uint256)" 1 --rpc-url "$ARC_MAINNET_RPC_URL"
-arc-cast call "$AGENTPAY_ADDRESS" "remainingAllowance(uint256)(uint256)" 999999 --rpc-url "$ARC_MAINNET_RPC_URL"
-
-# The USDC contract is the expected token and AgentPay holds none yet: expect 6 and 0
-arc-cast call "$USDC" "decimals()(uint8)" --rpc-url "$ARC_MAINNET_RPC_URL"
-arc-cast call "$USDC" "balanceOf(address)(uint256)" "$AGENTPAY_ADDRESS" --rpc-url "$ARC_MAINNET_RPC_URL"
-```
-
-## 7. Optional: publish source on the explorer (FREE, no gas)
-
-The constructor takes no arguments. This follows Arc's documented Blockscout pattern for
-testnet; confirm the mainnet explorer API path on https://explorer.arc.io if it errors.
-
-```bash
-arc-forge verify-contract "$AGENTPAY_ADDRESS" contracts/AgentPay.sol:AgentPay \
-  --chain-id 5042 \
-  --verifier blockscout \
-  --verifier-url https://explorer.arc.io/api/
-```
-
-## Before you spend real gas
-
-- Get an independent professional audit. The in-product review is not a substitute.
-- Confirm the USDC address in `contracts/AgentPayConfig.sol` against Arc's official list.
-- Confirm `DEPLOYER_ADDRESS` is the wallet you intend and holds enough USDC for gas.
-- AgentPay has no admin or upgrade path: each lease owner controls their own lease.
+AgentPay has no global administrator or upgrade path. A deployment is permanent. Obtain an independent professional security review before handling real funds; passing project tests is not a security audit.
