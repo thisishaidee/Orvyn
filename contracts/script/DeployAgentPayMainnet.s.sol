@@ -11,13 +11,15 @@ import {USDC_ADDRESS} from "../AgentPayConfig.sol";
 /// before broadcasting, then checks the deployed contract configuration.
 ///
 /// Required local environment variables:
-///   DEPLOYER_PRIVATE_KEY — signs the deployment; never logged.
-///   DEPLOYER_ADDRESS     — expected public address for that key.
+///   DEPLOYER_ADDRESS — must equal the hardcoded DEPLOYER constant.
+///   Signing happens on the connected Ledger (--ledger --sender); no private
+///   key is read by this script.
 ///
 /// Without --broadcast this script only simulates; it sends no transaction.
 contract DeployAgentPayMainnet is Script {
     uint256 internal constant ARC_MAINNET_CHAIN_ID = 5042;
     uint8 internal constant USDC_ERC20_DECIMALS = 6;
+    address internal constant DEPLOYER = 0xCB2A51B4D34cC6f5dd574F7b5BfA8260E4201C55;
 
     error WrongChain(uint256 expected, uint256 actual);
     error DeployerMismatch(address expected, address derived);
@@ -30,11 +32,9 @@ contract DeployAgentPayMainnet is Script {
             revert WrongChain(ARC_MAINNET_CHAIN_ID, block.chainid);
         }
 
-        uint256 deployerKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
-        address expectedDeployer = vm.envAddress("DEPLOYER_ADDRESS");
-        address deployer = vm.addr(deployerKey);
-        if (deployer != expectedDeployer) {
-            revert DeployerMismatch(expectedDeployer, deployer);
+        address deployer = vm.envAddress("DEPLOYER_ADDRESS");
+        if (deployer != DEPLOYER) {
+            revert DeployerMismatch(DEPLOYER, deployer);
         }
 
         if (USDC_ADDRESS.code.length == 0) revert UsdcNotDeployed(USDC_ADDRESS);
@@ -47,7 +47,7 @@ contract DeployAgentPayMainnet is Script {
         console.log("Deployer:        ", deployer);
         console.log("USDC (config):   ", USDC_ADDRESS);
 
-        vm.startBroadcast(deployerKey);
+        vm.startBroadcast(deployer);
         agentPay = new AgentPay();
         vm.stopBroadcast();
 
