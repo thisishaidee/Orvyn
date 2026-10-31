@@ -1,6 +1,9 @@
-import { Activity, Bot, KeyRound, LayoutDashboard, Rocket, Settings, Wallet } from 'lucide-react'
+import { Activity, Bot, KeyRound, LayoutDashboard, Settings, Wallet } from 'lucide-react'
 import { AppShell, type NavItem } from '@/components/layout/AppShell'
 import { WalletButton } from '@/components/layout/WalletButton'
+import { Notice } from '@/components/ui'
+import { useAccount } from 'wagmi'
+import { isExpectedDeployer } from '@/lib/agentpay-deploy'
 import { WalletEvents } from '@/components/wallet/WalletEvents'
 import { WalletModalProvider } from '@/components/wallet/WalletModalProvider'
 import { DesignPreview } from '@/design-system/DesignPreview'
@@ -24,7 +27,7 @@ const NAV: NavItem[] = [
 ]
 
 
-function renderPage(page: PageId, navigate: (page: PageId) => void) {
+function renderPage(page: PageId, navigate: (page: PageId) => void, canAccessDeploy: boolean) {
   switch (page) {
     case 'agents':
       return <AgentsPage />
@@ -35,7 +38,13 @@ function renderPage(page: PageId, navigate: (page: PageId) => void) {
     case 'wallet':
       return <WalletPage />
     case 'deploy':
-      return <DeployPage />
+      return canAccessDeploy ? <DeployPage /> : (
+        <div className="space-y-6">
+          <Notice tone="warning" title="Restricted page">
+            Connect the designated deployment wallet to access this page.
+          </Notice>
+        </div>
+      )
     case 'settings':
       return <SettingsPage />
     case 'design':
@@ -47,6 +56,8 @@ function renderPage(page: PageId, navigate: (page: PageId) => void) {
 
 export default function App() {
   const [page, navigate] = useRoute()
+  const { address, isConnected } = useAccount()
+  const canAccessDeploy = isConnected && isExpectedDeployer(address)
 
   return (
     <WalletModalProvider>
@@ -57,7 +68,7 @@ export default function App() {
         onNavigate={(id) => navigate(id as PageId)}
         topBarActions={(tone) => <WalletButton tone={tone} />}
       >
-        {renderPage(page, navigate)}
+        {renderPage(page, navigate, canAccessDeploy)}
       </AppShell>
     </WalletModalProvider>
   )
