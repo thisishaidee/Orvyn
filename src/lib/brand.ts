@@ -5,5 +5,5 @@
 export const BRAND = {
   name: 'Orvyn',
   tagline: 'Spending limits for AI agents, enforced by smart contract.',
-  repoUrl: 'https://github.com/thisishaidee/agentpay',
+  repoUrl: 'https://github.com/thisishaidee/orvynn',
 } as const
