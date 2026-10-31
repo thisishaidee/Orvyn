@@ -112,6 +112,13 @@ export function DeployPage() {
     setDeployerCheck({ status: 'ok', detail: address })
 
     try {
+      if (arc.id !== ARC_MAINNET_CHAIN_ID) {
+        throw new Error(`Configured Arc chain ID is ${arc.id}; expected ${ARC_MAINNET_CHAIN_ID}.`)
+      }
+      const rpcChainId = await mainnetClient.getChainId()
+      if (rpcChainId !== ARC_MAINNET_CHAIN_ID) {
+        throw new Error(`Arc Mainnet RPC returned chain ID ${rpcChainId}; expected ${ARC_MAINNET_CHAIN_ID}. Safety reads stopped.`)
+      }
       const [code, decimals] = await Promise.all([
         mainnetClient.getBytecode({ address: USDC_ADDRESS }),
         mainnetClient.readContract({ address: USDC_ADDRESS, abi: erc20Abi, functionName: 'decimals' }),
@@ -170,7 +177,10 @@ export function DeployPage() {
       }
       if (outcome.kind === 'pending') return
       const contractAddress = outcome.contractAddress
-      persist(hash, 'deployed', contractAddress)
+      // Receipt confirms contract creation, but the deployment is not marked
+      // complete until the contract's post-deployment checks pass. Keep it
+      // pending (and therefore non-repeatable) while verification is incomplete.
+      persist(hash, 'pending', contractAddress)
 
       try {
         const runtime = await mainnetClient.getBytecode({ address: contractAddress })
@@ -181,16 +191,19 @@ export function DeployPage() {
         ])
         if (usdc !== USDC_ADDRESS) throw new Error(`Contract USDC() is ${usdc}, expected ${USDC_ADDRESS}.`)
         if (nextLeaseId !== 1n) throw new Error(`nextLeaseId() is ${nextLeaseId}, expected 1.`)
+        persist(hash, 'deployed', contractAddress)
         setDeployedAddress(contractAddress)
         setPostCheck({ status: 'ok', detail: `USDC() and nextLeaseId() verified on ${contractAddress}.` })
         setPhase('deployed')
         toast.success('AgentPay deployed and verified')
       } catch (verifyErr) {
-        // The transaction SUCCEEDED; verification is display-level only.
+        // Preserve the confirmed transaction and address, but do not present
+        // this as a successful deployment until verification can be completed.
+        persist(hash, 'pending', contractAddress)
         setDeployedAddress(contractAddress)
         setPostCheck({ status: 'fail', detail: verifyErr instanceof Error ? verifyErr.message : 'Verification failed.' })
-        setPhase('deployed')
-        toast.warning('Deployed, but post-deploy verification failed. Check the contract on the explorer.')
+        setPhase('pending')
+        toast.warning('Transaction confirmed, but contract verification failed. Retry the check before treating it as deployed.')
       }
     } catch (err) {
       const outcome: ReceiptOutcome = classifyReceiptError(err)
@@ -335,7 +348,7 @@ export function DeployPage() {
             <InfoRow label="Arc USDC">{checkText(usdcCheck, `${USDC_ADDRESS} (6 decimals expected)`)}</InfoRow>
             <InfoRow label="Gas estimate">
               {gasEstimate
-                ? `${gasEstimate.toString()} gas estimated (about ${formatUnits(gasEstimate * 25_000_000_000n, 18)} USDC at 25 gwei). Limit sent: ${gasLimitWithBuffer(gasEstimate).toString()} (+${GAS_BUFFER_PERCENT}% buffer; unused gas is not charged).`
+                ? `${gasEstimate.toString()} gas estimated. Limit sent: ${gasLimitWithBuffer(gasEstimate).toString()} (+${GAS_BUFFER_PERCENT}% buffer). The wallet will show the network fee before you approve; no fee estimate is shown here.`
                 : (gasProblem ?? 'Not checked')}
             </InfoRow>
             <InfoRow label="Creation bytecode">
@@ -385,9 +398,22 @@ export function DeployPage() {
             )}
             {phase === 'pending' && txHash && (
               <div className="space-y-3">
-                <Notice tone="info" title="Deployment submitted, outcome unknown yet">
-                  The transaction is on its way. Do not submit another one; check its status instead.
-                </Notice>
+                {postCheck.status === 'fail' && deployedAddress ? (
+                  <Notice tone="danger" title="Transaction confirmed; verification incomplete">
+                    The contract creation transaction succeeded, but these checks failed: {postCheck.detail} Do not deploy again. Retry verification or inspect the saved address on the explorer.
+                  </Notice>
+                ) : (
+                  <Notice tone="info" title="Deployment submitted, outcome not yet verified">
+                    Do not submit another transaction; check its status instead.
+                  </Notice>
+                )}
+                {deployedAddress && (
+                  <InfoList>
+                    <InfoRow label="Created contract address">
+                      <span className="font-mono text-sm">{deployedAddress}</span>
+                    </InfoRow>
+                  </InfoList>
+                )}
                 <InfoList>
                   <InfoRow label="Transaction">
                     <a className="inline-flex items-center gap-1 underline" href={`${EXPLORER}/tx/${txHash}`} target="_blank" rel="noreferrer">
