@@ -3,8 +3,56 @@ pragma solidity ^0.8.20;
 
 import {AgentPayTestBase} from "./AgentPay.Base.t.sol";
 import {AgentPay} from "../AgentPay.sol";
+import {USDC_ADDRESS} from "../AgentPayConfig.sol";
+
+contract WrongDecimalsToken {
+    function decimals() external pure returns (uint8) {
+        return 18;
+    }
+}
+contract MissingDecimalsToken {}
 
 contract AgentPayCreateTest is AgentPayTestBase {
+    function test_ConstructorAcceptsArcTestnet() public {
+        vm.chainId(5042002);
+        AgentPay testnetPay = new AgentPay();
+        assertEq(address(testnetPay.USDC()), USDC_ADDRESS);
+    }
+
+    function test_ConstructorRejectsEthereum() public {
+        vm.chainId(1);
+        vm.expectRevert(abi.encodeWithSelector(AgentPay.UnsupportedChain.selector, 1));
+        new AgentPay();
+    }
+
+    function test_ConstructorRejectsLocalChain() public {
+        vm.chainId(31337);
+        vm.expectRevert(abi.encodeWithSelector(AgentPay.UnsupportedChain.selector, 31337));
+        new AgentPay();
+    }
+
+    function test_ConstructorRejectsMissingUsdcCode() public {
+        vm.etch(USDC_ADDRESS, bytes(""));
+        vm.expectRevert(abi.encodeWithSelector(AgentPay.UsdcNotDeployed.selector, USDC_ADDRESS));
+        new AgentPay();
+    }
+
+    function test_ConstructorRejectsWrongUsdcDecimals() public {
+        WrongDecimalsToken wrongToken = new WrongDecimalsToken();
+        vm.etch(USDC_ADDRESS, address(wrongToken).code);
+        vm.expectRevert(abi.encodeWithSelector(AgentPay.UsdcUnexpectedDecimals.selector, 18));
+        new AgentPay();
+    }
+
+    function test_ConstructorRejectsMissingUsdcDecimalsMetadata() public {
+        MissingDecimalsToken missingMetadata = new MissingDecimalsToken();
+        vm.etch(USDC_ADDRESS, address(missingMetadata).code);
+        vm.expectRevert(
+            abi.encodeWithSelector(AgentPay.UsdcMetadataCallFailed.selector, USDC_ADDRESS)
+        );
+        new AgentPay();
+    }
+
     function test_CreateLeaseWithoutDeposit() public {
         vm.expectEmit(true, true, true, true, address(pay));
         emit AgentPay.LeaseCreated(1, leaseOwner, delegate, CAP, PERIOD, START + LEASE_DURATION, true);
