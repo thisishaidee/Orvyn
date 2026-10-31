@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { CheckCircle2, ExternalLink, FileCheck, Rocket, ShieldAlert, Trash2 } from 'lucide-react'
 import { arc } from 'viem/chains'
-import { createPublicClient, erc20Abi, formatUnits, http, keccak256 } from 'viem'
+import { createPublicClient, erc20Abi, http, keccak256 } from 'viem'
 import { deployContract } from 'viem/actions'
 import { useAccount, useConnectorClient, useSwitchChain } from 'wagmi'
 import { toast } from 'sonner'
@@ -162,6 +162,10 @@ export function DeployPage() {
   const checkReceipt = useCallback(async (hash: `0x${string}`) => {
     setCheckingReceipt(true)
     try {
+      const rpcChainId = await mainnetClient.getChainId()
+      if (rpcChainId !== ARC_MAINNET_CHAIN_ID) {
+        throw new Error(`Arc Mainnet RPC returned chain ID ${rpcChainId}; expected ${ARC_MAINNET_CHAIN_ID}. Receipt verification stopped.`)
+      }
       const receipt = await mainnetClient.waitForTransactionReceipt({ hash })
       const outcome = classifyReceiptStatus(receipt.status, receipt.contractAddress ?? undefined)
       if (outcome.kind === 'reverted') {
