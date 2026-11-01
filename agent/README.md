@@ -26,6 +26,18 @@ npm run dev
 - AgentPay enforces delegate identity, lease status, expiry, recipient allowlist, spending cap, and available balance.
 - Never commit or share an agent private key. Never put secrets in source code, chat messages, screenshots, or GitHub issues.
 
+## Agent wallet preparation
+
+After the read-only checks pass, create `agent/.env` from `.env.example`, then run:
+
+```sh
+npm run wallet:create
+```
+
+The generator writes a fresh private key into the local ignored `.env` file with restrictive file permissions and prints only the public wallet address. It refuses to overwrite an existing configured key. Do not run this on a shared or untrusted computer. Do not send the private key to anyone.
+
+Creating the wallet does not fund it, connect it to a lease, or send a transaction.
+
 ## Next milestone
 
-Add a dedicated agent wallet and restricted payment action, then connect a language model only to that action. No transaction will be sent until a separate explicit test step.
+After the read-only checks pass and the owner has securely created the delegate wallet, add the restricted payment action. Connect a language model only to that action. No transaction will be sent until a separate explicit test step.
