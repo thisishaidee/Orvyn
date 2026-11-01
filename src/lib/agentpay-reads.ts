@@ -53,7 +53,7 @@ export function useReadGate(): ReadGate {
 async function blockTimestamps(client: PublicClient, blocks: bigint[]): Promise<Map<string, number>> {
   const unique = [...new Set(blocks.map((b) => b.toString()))]
   const map = new Map<string, number>()
-  const concurrency = 6
+  const concurrency = 12
   for (let i = 0; i < unique.length; i += concurrency) {
     const slice = unique.slice(i, i + concurrency)
     await Promise.all(
@@ -166,6 +166,10 @@ export function useDelegateLeases(): DataSource<Lease> {
   const query = useQuery({
     queryKey: ['agentpay', 'delegate-leases', gate.ok ? gate.chainId : 0, gate.ok ? gate.contract : 'none', gate.ok ? gate.address : 'none'],
     enabled: gate.ok,
+    staleTime: 60_000,
+    gcTime: 10 * 60_000,
+    retry: 1,
+    refetchOnWindowFocus: false,
     queryFn: () => {
       if (!gate.ok) return []
       return discoverLeases(gate.client, gate.contract, { delegate: gate.address }, eventStartBlock(gate.chainId))
@@ -348,6 +352,10 @@ export function useOwnerActivity(leases: Lease[], leasesReady: boolean): DataSou
   const query = useQuery({
     queryKey: ['agentpay', 'activity', gate.ok ? gate.chainId : 0, gate.ok ? gate.contract : 'none', gate.ok ? gate.address : 'none', leases.map((l) => l.id).join(',')],
     enabled: gate.ok && leasesReady,
+    staleTime: 60_000,
+    gcTime: 10 * 60_000,
+    retry: 1,
+    refetchOnWindowFocus: false,
     queryFn: () => {
       if (!gate.ok) return []
       return discoverActivity(gate.client, gate.contract, gate.address, leases, eventStartBlock(gate.chainId))
