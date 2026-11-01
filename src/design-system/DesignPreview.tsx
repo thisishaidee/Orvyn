@@ -85,7 +85,7 @@ export function DesignPreview() {
       <PageHeader
         eyebrow="Design system"
         title="Foundation components"
-        description="Tokens and building blocks for the AgentPay dashboard."
+        description="Tokens and building blocks for the Orvynn dashboard."
         actions={
           <>
             <Button variant="secondary">Secondary action</Button>
