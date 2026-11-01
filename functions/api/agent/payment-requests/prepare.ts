@@ -42,9 +42,8 @@ function parseBody(value: unknown) {
   };
 }
 
-export const onRequestGet = async ({ request }: { request: Request }) => {
-  if (new URL(request.url).pathname.endsWith("/health")) return json({ ok: true, service: "orvynn-agent", mode: "payment-preparation-only", chainId: 5042 });
-  return json({ error: "Route not found." }, 404);
+export const onRequestGet = async () => {
+  return json({ ok: true, service: "orvynn-agent", mode: "payment-preparation-only", chainId: 5042 });
 };
 
 export const onRequestPost = async ({ request, env }: { request: Request; env: Env }) => {
