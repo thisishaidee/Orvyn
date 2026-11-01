@@ -1,20 +1,23 @@
 /**
  * Explicit wallet-signed AgentPay transactions.
  *
- * This module never signs silently. Every write is submitted through the
- * connected wallet after the user initiates the action and reviews its prompt.
+ * This module never signs silently and never chains approval into a contract
+ * action. The caller must wait for approveUsdc() to succeed, then ask the user
+ * to confirm the separate AgentPay action.
  */
 import { useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import {
   erc20Abi,
+  formatUnits,
   type Address,
   type Hash,
 } from 'viem'
 import { useAccount, usePublicClient, useWalletClient } from 'wagmi'
 import { ARC_USDC_ADDRESS } from '@/lib/wallet'
-import { agentPayAbi } from '@/lib/agentpay-abi'
 import { useReadGate } from '@/lib/agentpay-reads'
+import { agentPayAbi as agentPayReadAbi } from '@/lib/agentpay-abi'
+import { validatePaymentInput } from '../../shared/payment-validation'
 import { agentPayWriteAbi } from '@/lib/agentpay-write-abi'
 
 export type TransactionResult = {
@@ -28,8 +31,6 @@ export type TransactionState =
   | 'missing-address'
   | 'wallet-unavailable'
   | 'ready'
-
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
 export function useAgentPayTransactions() {
   const gate = useReadGate()
@@ -65,7 +66,6 @@ export function useAgentPayTransactions() {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ['agentpay', 'leases'] }),
       queryClient.invalidateQueries({ queryKey: ['agentpay', 'activity'] }),
-      queryClient.invalidateQueries({ queryKey: ['agentpay', 'delegate-leases'] }),
     ])
     return { hash, blockNumber: receipt.blockNumber }
   }, [publicClient, queryClient])
@@ -152,7 +152,7 @@ export function useAgentPayTransactions() {
       account,
     })
     return waitForSuccess(hash)
-  }, [assertReady, walletClient, waitForSuccess])
+  }, [assertReady, walletClient, connectedAddress, waitForSuccess])
 
   const revoke = useCallback(async (leaseId: bigint): Promise<TransactionResult> => {
     if (leaseId < 0n) throw new Error('Lease ID is invalid.')
@@ -166,7 +166,7 @@ export function useAgentPayTransactions() {
       account,
     })
     return waitForSuccess(hash)
-  }, [assertReady, walletClient, waitForSuccess])
+  }, [assertReady, walletClient, connectedAddress, waitForSuccess])
 
   const withdraw = useCallback(async (leaseId: bigint): Promise<TransactionResult> => {
     if (leaseId < 0n) throw new Error('Lease ID is invalid.')
@@ -180,50 +180,74 @@ export function useAgentPayTransactions() {
       account,
     })
     return waitForSuccess(hash)
-  }, [assertReady, walletClient, waitForSuccess])
+  }, [assertReady, walletClient, connectedAddress, waitForSuccess])
 
-  /**
-   * Validate the live on-chain lease and simulate the exact spend before
-   * opening the delegate wallet confirmation. The contract remains the final
-   * enforcement boundary; these checks only provide clearer preflight errors.
-   */
   const spend = useCallback(async (leaseId: bigint, recipient: Address, amount: bigint): Promise<TransactionResult> => {
-    if (leaseId <= 0n || amount <= 0n) throw new Error('Lease ID and spend amount must be positive.')
-    const { contract, account } = assertReady()
-    if (!walletClient || !publicClient) throw new Error('The delegate wallet client is unavailable.')
+    const { contract, account, chainId } = assertReady()
+    if (!walletClient || !publicClient) throw new Error('The wallet and Arc network clients are unavailable.')
+    if (walletClient.account?.address.toLowerCase() !== account.toLowerCase()) {
+      throw new Error('The active signer does not match the connected delegate wallet.')
+    }
+    if (chainId !== 5042) throw new Error('Agent payment requests are currently supported on Arc Mainnet only.')
+    const input = validatePaymentInput({
+      leaseId,
+      delegate: account,
+      recipient,
+      amountUsdc: formatUnits(amount, 6),
+    })
+    recipient = input.recipient
+    amount = input.amount
 
-    const [lease, remaining, block] = await Promise.all([
-      publicClient.readContract({ address: contract, abi: agentPayAbi, functionName: 'leases', args: [leaseId] }),
-      publicClient.readContract({ address: contract, abi: agentPayAbi, functionName: 'remainingAllowance', args: [leaseId] }),
+    // Prepare against live contract state before opening the wallet confirmation.
+    const [lease, allowance, latestBlock] = await Promise.all([
+      publicClient.readContract({
+        address: contract,
+        abi: agentPayReadAbi,
+        functionName: 'leases',
+        args: [leaseId],
+      }),
+      publicClient.readContract({
+        address: contract,
+        abi: agentPayReadAbi,
+        functionName: 'remainingAllowance',
+        args: [leaseId],
+      }),
       publicClient.getBlock({ blockTag: 'latest' }),
     ])
+    const [owner, registeredDelegate, , , expiry, , , , balance, allowlistEnabled, revoked] = lease
 
-    const [owner, delegate, , , expiry, , , , balance, allowlistEnabled, revoked] = lease
-    if (owner.toLowerCase() === ZERO_ADDRESS) throw new Error('This lease does not exist.')
-    if (delegate.toLowerCase() !== account.toLowerCase()) throw new Error('The connected wallet is not the delegate assigned to this lease.')
-    if (revoked) throw new Error('This lease has been revoked by its owner.')
-    if (block.timestamp >= expiry) throw new Error('This lease has expired.')
-    if (amount > balance) throw new Error('The payment exceeds the USDC currently held in this lease.')
-    if (amount > remaining) throw new Error('The payment exceeds the remaining spending allowance.')
+    if (owner === '0x0000000000000000000000000000000000000000') throw new Error('Lease does not exist.')
+    if (registeredDelegate.toLowerCase() !== account.toLowerCase()) {
+      throw new Error('The connected wallet is not the delegate registered for this lease.')
+    }
+    if (revoked) throw new Error('This lease has been revoked.')
+    if (latestBlock.timestamp >= expiry) throw new Error('This lease has expired.')
+    if (amount > balance) throw new Error('Payment exceeds the USDC deposited in this lease.')
+    if (amount > allowance) throw new Error('Payment exceeds the remaining lease allowance.')
 
     if (allowlistEnabled) {
       const allowed = await publicClient.readContract({
         address: contract,
-        abi: agentPayAbi,
+        abi: agentPayReadAbi,
         functionName: 'allowedRecipients',
         args: [leaseId, recipient],
       })
-      if (!allowed) throw new Error('This recipient has not been approved by the lease owner.')
+      if (!allowed) throw new Error('Recipient is not approved by this lease allowlist.')
     }
 
-    const { request } = await publicClient.simulateContract({
+    // Simulate the exact spend call. This is read-only; walletClient still
+    // requires the delegate to approve the actual transaction.
+    const simulation = await publicClient.simulateContract({
       account,
       address: contract,
       abi: agentPayWriteAbi,
       functionName: 'spend',
       args: [leaseId, recipient, amount],
     })
-    const hash = await walletClient.writeContract(request)
+    const hash = await walletClient.writeContract({
+      ...simulation.request,
+      account,
+    })
     return waitForSuccess(hash)
   }, [assertReady, walletClient, publicClient, waitForSuccess])
 
