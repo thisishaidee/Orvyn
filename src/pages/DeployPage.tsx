@@ -226,7 +226,7 @@ export function DeployPage() {
         setDeployedAddress(contractAddress)
         setPostCheck({ status: 'ok', detail: `USDC() and nextLeaseId() verified on ${contractAddress}.` })
         setPhase('deployed')
-        toast.success('AgentPay deployed and verified')
+        toast.success('Orvynn contract deployed and verified')
       } catch (verifyErr) {
         // Preserve the confirmed transaction and address, but do not present
         // this as a successful deployment until verification can be completed.
@@ -329,8 +329,8 @@ export function DeployPage() {
     <div className="space-y-6 md:space-y-8">
       <PageHeader
         eyebrow="Deploy"
-        title="Deploy AgentPay"
-        description="Submit the compiled AgentPay contract to Arc Mainnet with your connected wallet. Nothing is sent until you confirm in MetaMask."
+        title="Deploy Orvynn contract"
+        description="Submit the compiled Orvynn contract to Arc Mainnet with your connected wallet. Nothing is sent until you confirm in your wallet."
       />
 
       <Card>
@@ -413,7 +413,7 @@ export function DeployPage() {
               <CheckCircle2 className="size-4" /> {postCheck.status === 'ok' ? postCheck.detail : 'Deployed.'}
             </Notice>
             <InfoList>
-              <InfoRow label="AgentPay address">
+              <InfoRow label="Orvynn contract address">
                 <span className="font-mono text-sm">{deployedAddress}</span>
               </InfoRow>
               <InfoRow label="Transaction">

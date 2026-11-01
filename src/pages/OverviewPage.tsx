@@ -60,7 +60,7 @@ export function OverviewPage({ onNavigate }: { onNavigate: (page: PageId) => voi
       <Card className="overflow-hidden">
         <div className="mb-4 rounded-xl bg-brand-mist/70 p-4 sm:p-5">
           <p className="text-overline uppercase text-brand-blue">Workspace readiness</p>
-          <h2 className="mt-1 text-section text-brand-navy">Your AgentPay control centre</h2>
+          <h2 className="mt-1 text-section text-brand-navy">Your Orvynn control centre</h2>
           <p className="mt-1 text-support text-ink-soft">A live checklist of the wallet and contract connection required before managing agent spending.</p>
         </div>
         <CardHeader title="Setup status" description="What is ready and what is not, based on your wallet right now." />

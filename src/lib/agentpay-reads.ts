@@ -29,10 +29,10 @@ export function useReadGate(): ReadGate {
   const contract = getAgentPayAddress(chainId)
 
   if (!isConnected || !address) {
-    return { ok: false, state: 'disconnected', reason: 'Connect a wallet to read AgentPay.' }
+    return { ok: false, state: 'disconnected', reason: 'Connect a wallet to read Orvynn.' }
   }
   if (!isSupportedChain(chainId)) {
-    return { ok: false, state: 'unsupported-network', reason: 'Switch to Arc Mainnet or Arc Testnet to read AgentPay.' }
+    return { ok: false, state: 'unsupported-network', reason: 'Switch to Arc Mainnet or Arc Testnet to read Orvynn.' }
   }
   if (!contract) {
     const env = agentPayAddressEnvVar(chainId)
@@ -40,8 +40,8 @@ export function useReadGate(): ReadGate {
       ok: false,
       state: 'missing-address',
       reason: env
-        ? `No AgentPay contract address is configured for this network. Set ${env} after a real deployment.`
-        : 'No AgentPay contract address is configured for this network.',
+        ? `No Orvynn contract address is configured for this network. Set ${env} after a real deployment.`
+        : 'No Orvynn contract address is configured for this network.',
     }
   }
   if (!client) {
@@ -233,7 +233,7 @@ export function useOwnerLeases(): DataSource<Lease> {
   })
 
   if (!gate.ok) return { state: gate.state, items: [], reason: gate.reason }
-  if (query.isPending) return { state: 'loading', items: [], reason: 'Reading leases from the AgentPay contract.' }
+  if (query.isPending) return { state: 'loading', items: [], reason: 'Reading leases from the Orvynn contract.' }
   if (query.isError) {
     return { state: 'error', items: [], reason: query.error instanceof Error ? query.error.message : 'The lease read failed.' }
   }
@@ -356,7 +356,7 @@ export function useOwnerActivity(leases: Lease[], leasesReady: boolean): DataSou
 
   if (!gate.ok) return { state: gate.state, items: [], reason: gate.reason }
   if (!leasesReady) return { state: 'loading', items: [], reason: 'Waiting for lease discovery before reading activity.' }
-  if (query.isPending) return { state: 'loading', items: [], reason: 'Reading activity from the AgentPay contract.' }
+  if (query.isPending) return { state: 'loading', items: [], reason: 'Reading activity from the Orvynn contract.' }
   if (query.isError) {
     return { state: 'error', items: [], reason: query.error instanceof Error ? query.error.message : 'The activity read failed.' }
   }

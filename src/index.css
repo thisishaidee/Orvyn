@@ -45,6 +45,7 @@
   }
 
   html {
+    overflow-x: clip;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
     scroll-behavior: smooth;
@@ -62,6 +63,7 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     overflow-x: clip; /* guard: layouts must still never rely on this */
+    overscroll-behavior-x: none;
   }
 
   h1,

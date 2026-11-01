@@ -160,7 +160,7 @@ export function LeaseDetail({ lease }: { lease?: Lease }) {
             <Button variant="destructive" disabled={tx.state !== 'ready' || status !== 'active'} onClick={() => setRevokeOpen(true)}>Revoke lease</Button>
           </div>
         )}
-        {tx.state !== 'ready' && <p className="mt-3 text-support text-ink-soft">{tx.reason || 'Connect a wallet on an Arc network with a deployed AgentPay contract.'}</p>}
+        {tx.state !== 'ready' && <p className="mt-3 text-support text-ink-soft">{tx.reason || 'Connect a wallet on an Arc network with a deployed Orvynn contract.'}</p>}
       </Card>
 
       <Modal open={action === 'deposit'} onClose={closeAction} dismissible={!busy} title="Add funds" description="USDC approval and the lease deposit are separate wallet transactions.">
@@ -169,10 +169,10 @@ export function LeaseDetail({ lease }: { lease?: Lease }) {
             {(props) => <Input {...props} type="number" min="0.000001" step="0.000001" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="50.00" />}
           </Field>
           {error && <Notice tone="danger" title="Deposit not completed">{error}</Notice>}
-          <div className="flex justify-end gap-2 border-t border-line pt-4">
-            <Button variant="secondary" disabled={busy} onClick={closeAction}>Cancel</Button>
-            <Button variant="secondary" loading={busy} disabled={tx.state !== 'ready' || depositUnits <= 0n || approvedAmount >= depositUnits} onClick={() => void approveDeposit()}>Approve USDC</Button>
-            <Button loading={busy} disabled={tx.state !== 'ready' || depositUnits <= 0n || approvedAmount < depositUnits} onClick={() => void submitDeposit()}>Deposit funds</Button>
+          <div className="flex flex-col gap-2 border-t border-line pt-4 sm:flex-row sm:flex-wrap sm:justify-end">
+            <Button variant="secondary" className="min-h-11 w-full sm:w-auto" disabled={busy} onClick={closeAction}>Cancel</Button>
+            <Button variant="secondary" className="min-h-11 w-full sm:w-auto" loading={busy} disabled={tx.state !== 'ready' || depositUnits <= 0n || approvedAmount >= depositUnits} onClick={() => void approveDeposit()}>Approve USDC</Button>
+            <Button className="min-h-11 w-full sm:w-auto" loading={busy} disabled={tx.state !== 'ready' || depositUnits <= 0n || approvedAmount < depositUnits} onClick={() => void submitDeposit()}>Deposit funds</Button>
           </div>
         </div>
       </Modal>

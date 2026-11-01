@@ -8,9 +8,9 @@ const steps = [
 ]
 
 const features = [
-  { eyebrow: 'PERMISSION LAYER', title: 'Give every agent a boundary.', text: 'Create separate leases with defined spending limits and expiry dates.', action: 'Explore leases', icon: ShieldCheck, art: 'blue' },
-  { eyebrow: 'PAYMENT CONTROL', title: 'Decide where funds can go.', text: 'Optionally restrict a delegate to wallet addresses you approve.', action: 'Recipient rules', icon: Check, art: 'teal' },
-  { eyebrow: 'OWNER OVERSIGHT', title: 'Keep control after funding.', text: 'Review activity, stop future spending, and withdraw remaining funds.', action: 'View activity', icon: Activity, art: 'violet' },
+  { eyebrow: 'PERMISSION LAYER', title: 'Give every agent a boundary.', text: 'Create separate leases with defined spending limits and expiry dates.', action: 'Explore leases', href: '/?page=leases', icon: ShieldCheck, art: 'blue' },
+  { eyebrow: 'PAYMENT CONTROL', title: 'Decide where funds can go.', text: 'Optionally restrict a delegate to wallet addresses you approve.', action: 'Recipient rules', href: '/?page=leases', icon: Check, art: 'teal' },
+  { eyebrow: 'OWNER OVERSIGHT', title: 'Keep control after funding.', text: 'Review activity, stop future spending, and withdraw remaining funds.', action: 'View activity', href: '/?page=activity', icon: Activity, art: 'violet' },
 ]
 
 function OrvynnMark({ className }: { className?: string }) {
@@ -70,11 +70,11 @@ export function LandingPage({ onLaunch }: { onLaunch: () => void }) {
               <div className="relative bg-gradient-to-b from-[#101820] to-[#111820] px-5 pb-6 pt-1 sm:px-7 sm:pb-7">
                 <div className="flex items-start justify-between gap-3">
                   <div><p className="text-[10px] font-medium uppercase tracking-[.16em] text-white/55">LEASE BALANCE</p><p className="mt-2 text-3xl font-light tracking-tight sm:text-4xl">12,450.00 <span className="text-base text-white/65">USDC</span></p></div>
-                  <span className="mt-1 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-[10px] text-emerald-200">Illustrative</span>
+                  <span className="mt-1 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-[10px] font-medium text-emerald-200">Example data</span>
                 </div>
                 <div className="mt-5 flex items-center justify-between gap-4 text-xs text-white/65"><span>Monthly spending limit</span><span>25,000 USDC</span></div>
                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full w-1/2 rounded-full bg-gradient-to-r from-[#5C9FE9] to-[#9CCBFA]" /></div>
-                <div className="mt-2 flex justify-between text-[11px] text-white/45"><span>50% allocated</span><span>50% available</span></div>
+                <div className="mt-2 flex justify-between text-[11px] text-white/45"><span>50% allocated</span><span>50% available</span></div>\n                <p className="mt-4 border-t border-white/10 pt-3 text-[11px] leading-5 text-white/45">Sample figures for illustration only. This is not live wallet or lease data.</p>
               </div>
             </article>
           </div>
@@ -86,13 +86,13 @@ export function LandingPage({ onLaunch }: { onLaunch: () => void }) {
             <p className="max-w-sm text-sm leading-6 text-ink-soft">Give agents room to operate without giving them unrestricted access to your funds.</p>
           </div>
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {features.map(({ eyebrow, title, text, action, icon: Icon, art }) => <article key={title} className="group overflow-hidden rounded-[24px] border border-[#E9E8E4] bg-white shadow-[0_14px_38px_rgba(27,38,55,.055)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_48px_rgba(27,38,55,.09)]">
+            {features.map(({ eyebrow, title, text, action, href, icon: Icon, art }) => <article key={title} className="group overflow-hidden rounded-[24px] border border-[#E9E8E4] bg-white shadow-[0_14px_38px_rgba(27,38,55,.055)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_48px_rgba(27,38,55,.09)]">
               <FeatureArt tone={art} />
               <div className="relative -mt-3 bg-gradient-to-b from-white/0 via-white/95 to-white px-6 pb-7 pt-5 sm:px-7">
                 <p className="text-[10px] font-medium uppercase tracking-[.15em] text-brand-blue">{eyebrow}</p>
                 <h3 className="mt-3 text-xl font-medium leading-snug tracking-[-.025em] text-brand-navy">{title}</h3>
                 <p className="mt-2 min-h-12 text-sm leading-6 text-ink-soft">{text}</p>
-                <span className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-full border border-line bg-white px-4 text-xs font-medium text-brand-navy"><Icon className="size-3.5 text-brand-blue" />{action}</span>
+                <a href={href} aria-label={`${action}: ${title}`} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full border border-line bg-white px-4 text-xs font-medium text-brand-navy transition hover:border-brand-pale hover:bg-brand-mist focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"><Icon className="size-3.5 text-brand-blue" />{action}<ArrowRight className="size-3.5" aria-hidden /></a>
               </div>
             </article>)}
           </div>

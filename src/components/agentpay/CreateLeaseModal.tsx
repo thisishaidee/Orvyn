@@ -101,6 +101,7 @@ export function CreateLeaseModal({ open, onClose, onCreated }: {
           <input type="checkbox" checked={allowlist} onChange={(e) => setAllowlist(e.target.checked)} className="mt-1 size-4" />
           <span><strong className="font-medium">Restrict recipients</strong><span className="mt-0.5 block text-support text-ink-soft">Only recipients you approve later can receive payments.</span></span>
         </label>
+        {busy && <p role="status" aria-live="polite" className="text-support text-ink-soft">Waiting for your wallet confirmation and for Arc to confirm the transaction. This can take a few seconds.</p>}
         {error && <Notice tone="danger" title="Could not create lease">{error}</Notice>}
       </div>
     </Modal>

@@ -48,7 +48,7 @@ export function WalletPage() {
       <PageHeader
         eyebrow="Wallet"
         title="Wallet"
-        description="The wallet you connect owns your leases and signs every action. AgentPay never sees your keys."
+        description="The wallet you connect owns your leases and signs every action. Orvynn never sees your keys."
         actions={
           isConnected ? (
             <Button variant="secondary" onClick={() => disconnect()}>
@@ -104,7 +104,7 @@ export function WalletPage() {
                   <span className="text-ink-mute">Not available</span>
                 )}
               </InfoRow>
-              <InfoRow label="Network" hint={network.chainId !== undefined ? `Chain ID ${network.chainId}` : undefined}>
+              <InfoRow label="Network">
                 <span className="inline-flex flex-wrap items-center gap-2 md:justify-end">
                   {network.label}
                   {isConnected && <Badge tone={network.supported ? 'success' : 'warning'}>{network.supported ? 'Supported' : 'Not supported'}</Badge>}

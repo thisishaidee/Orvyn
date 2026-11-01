@@ -64,10 +64,12 @@ export function useAgentPayTransactions() {
     if (receipt.status !== 'success') {
       throw new Error(`Transaction ${hash} was mined but reverted.`)
     }
-    await Promise.all([
+    // The receipt is the confirmation boundary. Refresh dashboard data in the
+    // background so the wallet flow does not remain blocked by follow-up reads.
+    void Promise.all([
       queryClient.invalidateQueries({ queryKey: ['agentpay', 'leases'] }),
       queryClient.invalidateQueries({ queryKey: ['agentpay', 'activity'] }),
-    ])
+    ]).catch(() => undefined)
     return { hash, blockNumber: receipt.blockNumber }
   }, [publicClient, queryClient])
 

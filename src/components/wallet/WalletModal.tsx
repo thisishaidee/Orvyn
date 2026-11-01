@@ -226,7 +226,7 @@ function WalletModalContent({ onClose }: { onClose: () => void }) {
             Try again
           </Button>
         )}
-        <p className="text-center text-support text-ink-mute">Approve the request in your wallet. AgentPay never asks for a recovery phrase or private key.</p>
+        <p className="text-center text-support text-ink-mute">Approve the request in your wallet. Orvynn never asks for a recovery phrase or private key.</p>
       </div>
     )
   } else {

@@ -50,10 +50,10 @@ export function DataTable<T>({ columns, rows, getRowId, caption, loading, error,
   }
 
   return (
-    <div className={className}>
+    <div className={cn("min-w-0 max-w-full overflow-hidden", className)}>
       {/* Tablet and up */}
-      <div className="hidden overflow-x-auto md:block">
-        <table className="w-full border-collapse text-left">
+      <div className="hidden min-w-0 max-w-full overflow-hidden md:block">
+        <table className="w-full table-fixed border-collapse text-left">
           <caption className="sr-only">{caption}</caption>
           <thead>
             <tr className="border-b border-line bg-brand-mist/60">
@@ -62,7 +62,7 @@ export function DataTable<T>({ columns, rows, getRowId, caption, loading, error,
                   key={c.key}
                   scope="col"
                   className={cn(
-                    'whitespace-nowrap px-4 py-3 text-overline uppercase text-ink-soft',
+                    'break-words px-3 py-3 text-overline uppercase text-ink-soft lg:px-4',
                     c.align === 'right' && 'text-right',
                     c.hideOnTablet && 'hidden lg:table-cell',
                   )}
@@ -79,7 +79,7 @@ export function DataTable<T>({ columns, rows, getRowId, caption, loading, error,
                   <td
                     key={c.key}
                     className={cn(
-                      'max-w-0 px-4 py-3.5 align-middle text-body',
+                      'max-w-0 break-words px-3 py-3.5 align-middle text-body lg:px-4',
                       c.align === 'right' && 'text-right',
                       c.hideOnTablet && 'hidden lg:table-cell',
                     )}
