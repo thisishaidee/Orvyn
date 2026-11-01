@@ -12,6 +12,7 @@ import { ActivityPage } from '@/pages/ActivityPage'
 import { AgentsPage } from '@/pages/AgentsPage'
 import { LeasesPage } from '@/pages/LeasesPage'
 import { DeployPage } from '@/pages/DeployPage'
+import { LandingPage } from '@/pages/LandingPage'
 import { OverviewPage } from '@/pages/OverviewPage'
 import { SettingsPage } from '@/pages/SettingsPage'
 import { WalletPage } from '@/pages/WalletPage'
@@ -26,9 +27,10 @@ const NAV: NavItem[] = [
   { id: 'settings', label: 'Settings', icon: Settings },
 ]
 
-
 function renderPage(page: PageId, navigate: (page: PageId) => void, canAccessDeploy: boolean) {
   switch (page) {
+    case 'landing':
+      return <LandingPage onLaunch={() => navigate('overview')} />
     case 'agents':
       return <AgentsPage />
     case 'leases':
@@ -58,6 +60,8 @@ export default function App() {
   const [page, navigate] = useRoute()
   const { address, isConnected } = useAccount()
   const canAccessDeploy = isConnected && isExpectedDeployer(address)
+
+  if (page === 'landing') return <LandingPage onLaunch={() => navigate('overview')} />
 
   return (
     <WalletModalProvider>
