@@ -25,7 +25,7 @@ function FeatureArt({ tone }: { tone: string }) {
     teal: 'from-[#147D83] via-[#69B8B4] to-[#E0F0EA]',
     violet: 'from-[#7D83C8] via-[#B7BCE8] to-[#F0EFFA]',
   }
-  return <div className={`relative h-40 overflow-hidden bg-gradient-to-br ${tones[tone]} sm:h-44`}>
+  return <div className={`relative hidden h-40 overflow-hidden bg-gradient-to-br ${tones[tone]} sm:block sm:h-44`}>
     <div className="absolute -right-8 -top-16 size-64 rounded-full border border-white/40 bg-white/10 shadow-[inset_0_0_55px_rgba(255,255,255,.3)]" />
     <div className="absolute -bottom-32 left-8 h-64 w-[78%] rotate-[-18deg] rounded-[48%] border border-white/50 bg-white/10 shadow-[0_0_60px_rgba(255,255,255,.25)]" />
     <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white" />
@@ -59,7 +59,7 @@ export function LandingPage({ onLaunch }: { onLaunch: () => void }) {
             <p className="mt-5 text-xs leading-5 text-ink-mute">On-chain spending rules. Owner-controlled leases. USDC on Arc.</p>
           </div>
 
-          <div className="relative mx-auto w-full max-w-[620px]">
+          <div className="relative mx-auto hidden w-full max-w-[620px] sm:block">
             <div className="absolute -inset-5 rounded-[2rem] bg-[radial-gradient(ellipse,rgba(112,159,216,.24),transparent_70%)] blur-2xl" />
             <article className="relative isolate overflow-hidden rounded-[28px] bg-[#0E0E0F] text-white shadow-[0_28px_80px_rgba(23,41,75,.2)]">
               <div className="relative h-[220px] overflow-hidden sm:h-[270px] lg:h-[300px]">
@@ -101,10 +101,17 @@ export function LandingPage({ onLaunch }: { onLaunch: () => void }) {
         <section id="how-it-works" className="border-y border-line bg-white/70 py-16 sm:py-20">
           <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
             <div className="max-w-2xl"><p className="text-[11px] font-medium uppercase tracking-[.15em] text-brand-blue">How it works</p><h2 className="mt-3 text-[2rem] font-light leading-[1.1] tracking-[-.035em] text-brand-navy sm:text-[2.8rem]">A clear boundary between an agent and your funds.</h2><p className="mt-4 leading-7 text-ink-soft">Instead of handing a delegate unrestricted wallet access, give it a specific permission enforced by the contract.</p></div>
-            <div className="mt-10 grid gap-5 md:grid-cols-3">
-              {steps.map(({ title, text, icon: Icon }, index) => <article key={title} className="rounded-[24px] border border-line bg-canvas p-6 sm:p-7">
-                <div className="flex size-11 items-center justify-center rounded-2xl bg-[#E9F0F8] text-brand-blue"><Icon className="size-5" /></div>
-                <p className="mt-6 text-[10px] font-medium uppercase tracking-[.15em] text-ink-mute">STEP 0{index + 1}</p><h3 className="mt-2 text-lg font-medium text-brand-navy">{title}</h3><p className="mt-2 text-sm leading-6 text-ink-soft">{text}</p>
+            <div className="mt-10 grid gap-4 md:grid-cols-3 md:gap-5">
+              {steps.map(({ title, text, icon: Icon }, index) => <article key={title} className="group relative overflow-hidden rounded-[22px] border border-[#DCE6F2] bg-white p-5 shadow-[0_10px_28px_rgba(23,41,75,.045)] transition duration-300 hover:-translate-y-1 hover:border-[#B9CDE6] hover:shadow-[0_18px_38px_rgba(23,41,75,.09)] sm:p-7">
+                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#315B91] via-[#6C8FCB] to-[#A9C4E8]" />
+                <div className="flex items-center justify-between gap-4">
+                  <span className="inline-flex items-center rounded-full border border-[#DCE6F2] bg-[#F5F8FC] px-3 py-1 text-[10px] font-semibold uppercase tracking-[.14em] text-brand-blue">Step 0{index + 1}</span>
+                  <span className="flex size-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#EAF2FC] to-[#E8E5F7] text-brand-blue ring-1 ring-[#DCE6F2] transition group-hover:scale-105"><Icon className="size-5" /></span>
+                </div>
+                <h3 className="mt-6 text-lg font-semibold tracking-[-.02em] text-brand-navy sm:text-xl">{title}</h3>
+                <p className="mt-2 text-sm leading-6 text-ink-soft">{text}</p>
+                <div className="mt-6 h-px w-full bg-gradient-to-r from-[#DCE6F2] via-[#E9EEF6] to-transparent" />
+                <p className="mt-3 text-[11px] font-medium tracking-wide text-brand-blue">{index === 0 ? 'DEFINE PERMISSIONS' : index === 1 ? 'ADD FUNDS' : 'RETAIN OVERSIGHT'}</p>
               </article>)}
             </div>
           </div>
