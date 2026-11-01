@@ -17,7 +17,7 @@ export function NotConnectedNotice({ subject }: { subject: string }) {
     : 'Not connected to the contract yet'
   return (
     <Notice tone={source.state === 'error' ? 'danger' : 'info'} title={title}>
-      {source.reason || `The ${subject} section cannot be filled until the AgentPay contract can be read.`}
+      {source.reason || `The ${subject} section cannot be filled until the Orvynn contract can be read.`}
     </Notice>
   )
 }
