@@ -17,7 +17,7 @@ import { useAccount, usePublicClient, useWalletClient } from 'wagmi'
 import { ARC_USDC_ADDRESS } from '@/lib/wallet'
 import { useReadGate } from '@/lib/agentpay-reads'
 import { agentPayAbi as agentPayReadAbi } from '@/lib/agentpay-abi'
-import { validatePaymentInput } from '../../shared/payment-validation'
+import { validatePaymentInput } from '../../agent/src/payment-validation'
 import { agentPayWriteAbi } from '@/lib/agentpay-write-abi'
 
 export type TransactionResult = {
