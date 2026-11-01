@@ -46,13 +46,13 @@ The following function schema can be registered with an OpenAI-compatible tool-c
 }
 ```
 
-## Tool execution
+## Deploying the Orvynn API on Cloudflare Pages\n\nThe public app includes a Pages Function at `/api/agent/payment-requests/prepare`. Configure `AGENT_API_TOKEN` as a Cloudflare Pages secret before using it. Optionally configure `ARC_RPC_URL`, `AGENTPAY_ADDRESS`, and `USDC_ADDRESS`; the defaults target the deployed Arc Mainnet contract and Arc USDC. The function is read-only: it validates lease state and simulates `spend`, but never signs or submits a transaction.\n\n## Tool execution
 
 When the model calls `prepare_orvynn_payment`, the host application should make this request from a trusted server environment:
 
 ```ts
 const response = await fetch(
-  "https://YOUR_ORVYNN_AGENT_API/v1/payment-requests/prepare",
+  "https://orvynn.pages.dev/api/agent/payment-requests/prepare",
   {
     method: "POST",
     headers: {
