@@ -82,7 +82,7 @@ export function Modal({ open, onClose, title, description, children, footer, dis
       labelledBy={titleId}
       describedBy={descId}
       className={cn(
-        'open:flex open:flex-col touch-pan-y overflow-x-hidden bg-surface',
+        'open:flex open:flex-col touch-pan-y overflow-x-clip overscroll-x-none bg-surface',
         'inset-x-0 bottom-0 top-auto m-0 h-[min(90dvh,44rem)] w-full max-w-none animate-sheet-up overscroll-y-contain rounded-t-panel',
         'md:inset-0 md:m-auto md:h-fit md:max-h-[85dvh] md:w-[calc(100%-3rem)] md:animate-fade-in md:rounded-panel',
         sizes[size],
@@ -111,7 +111,7 @@ export function Modal({ open, onClose, title, description, children, footer, dis
           </button>
         )}
       </div>
-      {children && <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-3 md:px-6">{children}</div>}
+      {children && <div className="min-h-0 min-w-0 w-full max-w-full flex-1 touch-pan-y overflow-x-clip overflow-y-auto overscroll-x-none overscroll-y-contain px-5 py-3 md:px-6">{children}</div>}
       {footer && (
         <div className="flex flex-col-reverse gap-2 border-t border-line px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end md:px-6">
           {footer}
