@@ -93,7 +93,7 @@ export function LandingPage({ onLaunch }: { onLaunch: () => void }) {
           <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
             <div className="max-w-2xl"><p className="text-xs font-medium uppercase tracking-[.12em] text-brand-blue">How it works</p><h2 className="mt-3 text-[2rem] font-light leading-[1.08] tracking-[-.03em] text-brand-navy sm:text-[3rem]">A clear boundary between an agent and your funds.</h2><p className="mt-4 leading-7 text-ink-soft">Instead of handing a delegate unrestricted access to a wallet, give it a specific permission with limits enforced by the contract.</p></div>
             <div className="mt-12 grid gap-5 md:grid-cols-3">
-              {steps.map((step) => <article key={step.number} className="rounded-2xl border border-line bg-canvas p-6 sm:p-7"><p className="text-sm font-semibold tracking-widest text-brand-blue">{step.number}</p><h3 className="mt-4 text-base font-medium text-brand-navy">{step.title}</h3><p className="mt-3 text-sm leading-6 text-ink-soft">{step.text}</p></article>)}
+              {steps.map((step) => <article key={step.number} className="rounded-2xl border border-line bg-canvas p-6 sm:p-7"><p className="text-sm font-semibold tracking-widest text-brand-blue">{step.number}</p><h3 className="mt-4 text-base font-medium text-brand-navy">{step.title}</h3><p className="mt-2 text-sm leading-6 text-ink-soft">{step.text}</p></article>)}
             </div>
           </div>
         </section>
@@ -117,11 +117,46 @@ export function LandingPage({ onLaunch }: { onLaunch: () => void }) {
         </section>
       </main>
 
-      <footer className="border-t border-line bg-surface">
-        <div className="mx-auto flex max-w-7xl flex-col gap-6 px-5 py-8 sm:px-8 md:flex-row md:items-center md:justify-between lg:px-10">
-          <div className="flex items-center gap-3"><span className="flex size-9 items-center justify-center rounded-lg bg-white text-brand-navy"><OrvynnMark className="size-7" /></span><div><p className="font-semibold text-brand-navy">{BRAND.name}</p><p className="text-xs text-ink-mute">{BRAND.tagline}</p></div></div>
-          <nav aria-label="Footer navigation" className="flex flex-wrap gap-x-6 gap-y-3 text-sm text-ink-soft"><a href="#how-it-works" className="hover:text-ink">How it works</a><a href="/?page=overview" className="hover:text-ink">Open app</a><a href={BRAND.repoUrl} target="_blank" rel="noreferrer" className="hover:text-ink">GitHub source</a></nav>
-          <p className="text-xs text-ink-mute">Built for Arc · USDC on-chain spending permissions</p>
+      <footer className="bg-canvas">
+        <div className="mx-auto max-w-7xl px-5 pb-10 pt-12 sm:px-8 sm:pb-12 sm:pt-14 lg:px-10">
+          <div className="flex flex-col gap-6 border-b border-line/70 pb-8 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-2">
+              <a href={BRAND.repoUrl} target="_blank" rel="noreferrer" className="text-base font-normal text-brand-navy transition hover:text-brand-blue">Contact via GitHub</a>
+              <p className="text-sm text-ink-soft">Questions, feedback or contributions.</p>
+            </div>
+            <div className="flex items-center justify-between gap-5 sm:justify-end">
+              <a href={BRAND.repoUrl} target="_blank" rel="noreferrer" aria-label="Orvynn on GitHub" className="inline-flex size-10 items-center justify-center rounded-full text-brand-navy transition hover:bg-surface hover:text-brand-blue"><svg viewBox="0 0 24 24" aria-hidden="true" className="size-5" fill="currentColor"><path d="M12 .9a11.1 11.1 0 0 0-3.51 21.63c.56.1.76-.24.76-.54v-2.1c-3.1.67-3.76-1.31-3.76-1.31-.5-1.28-1.23-1.62-1.23-1.62-1.01-.69.08-.68.08-.68 1.12.08 1.71 1.15 1.71 1.15.99 1.7 2.6 1.21 3.23.93.1-.72.39-1.21.7-1.49-2.48-.28-5.09-1.24-5.09-5.52 0-1.22.44-2.22 1.15-3-.12-.28-.5-1.42.11-2.96 0 0 .94-.3 3.05 1.15a10.6 10.6 0 0 1 5.55 0c2.11-1.45 3.05-1.15 3.05-1.15.61 1.54.23 2.68.11 2.96.72.78 1.15 1.78 1.15 3 0 4.29-2.61 5.24-5.1 5.51.4.35.75 1.03.75 2.08v3.07c0 .3.2.65.77.54A11.1 11.1 0 0 0 12 .9Z"/></svg></a>
+              <button onClick={onLaunch} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-5 text-sm font-medium text-brand-navy shadow-card transition hover:bg-surface-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue">Open app <ArrowRight className="size-4" aria-hidden /></button>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-9 pt-9 sm:grid-cols-2 sm:gap-10 lg:grid-cols-3 lg:gap-16">
+            <div>
+              <p className="text-[11px] font-medium uppercase tracking-[.08em] text-ink-mute">Product</p>
+              <nav aria-label="Product links" className="mt-5 flex flex-col items-start gap-3.5 text-[15px] leading-6 text-ink">
+                <a href="#how-it-works" className="transition hover:text-brand-blue">How it works</a>
+                <a href="/?page=overview" className="transition hover:text-brand-blue">Overview</a>
+                <a href="/?page=leases" className="transition hover:text-brand-blue">Leases</a>
+              </nav>
+            </div>
+            <div>
+              <p className="text-[11px] font-medium uppercase tracking-[.08em] text-ink-mute">Developers</p>
+              <nav aria-label="Developer links" className="mt-5 flex flex-col items-start gap-3.5 text-[15px] leading-6 text-ink">
+                <a href={BRAND.repoUrl} target="_blank" rel="noreferrer" className="transition hover:text-brand-blue">GitHub repository</a>
+                <a href={BRAND.repoUrl + '/tree/main/contracts'} target="_blank" rel="noreferrer" className="transition hover:text-brand-blue">Smart contracts</a>
+              </nav>
+            </div>
+            <div>
+              <p className="text-[11px] font-medium uppercase tracking-[.08em] text-ink-mute">Company</p>
+              <nav aria-label="Company links" className="mt-5 flex flex-col items-start gap-3.5 text-[15px] leading-6 text-ink">
+                <a href={BRAND.repoUrl} target="_blank" rel="noreferrer" className="transition hover:text-brand-blue">About Orvynn</a>
+                <a href="https://arc.network" target="_blank" rel="noreferrer" className="transition hover:text-brand-blue">Built for Arc</a>
+              </nav>
+            </div>
+          </div>
+          <div className="mt-12 flex flex-col gap-2 text-xs leading-5 text-ink-mute sm:flex-row sm:items-center sm:justify-between">
+            <p>{BRAND.name} · {BRAND.tagline}</p>
+            <p>USDC spending permissions on Arc.</p>
+          </div>
         </div>
       </footer>
     </div>
