@@ -75,6 +75,15 @@ export interface AppShellProps {
 export function AppShell({ nav, activeId, onNavigate, sidebarFooter, topBarActions, children }: AppShellProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const actions = (tone: 'dark' | 'light') => (typeof topBarActions === 'function' ? topBarActions(tone) : topBarActions)
+  useEffect(() => {
+    if (!mobileMenuOpen) return
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMobileMenuOpen(false)
+    }
+    window.addEventListener('keydown', closeOnEscape)
+    return () => window.removeEventListener('keydown', closeOnEscape)
+  }, [mobileMenuOpen])
+
   const handleNavigate = (id: string) => {
     onNavigate(id)
     setMobileMenuOpen(false)
@@ -134,7 +143,7 @@ export function AppShell({ nav, activeId, onNavigate, sidebarFooter, topBarActio
         aria-hidden={!mobileMenuOpen}
         className={cn(
           'fixed inset-y-14 left-0 z-50 w-[min(18rem,86vw)] border-r border-white/10 bg-brand-navy bg-navy-gradient text-white shadow-2xl transition-transform duration-300 ease-out md:hidden',
-          mobileMenuOpen ? 'translate-x-0' : '-translate-x-full pointer-events-none',
+          mobileMenuOpen ? 'visible translate-x-0' : 'invisible -translate-x-full pointer-events-none',
         )}
       >
         <SidebarContent nav={nav} activeId={activeId} onNavigate={handleNavigate} footer={sidebarFooter} />
