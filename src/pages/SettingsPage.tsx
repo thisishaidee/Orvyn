@@ -102,7 +102,7 @@ export function SettingsPage() {
             <Fact ok>This app never asks for your private key or recovery phrase. Your wallet signs every action.</Fact>
             <Fact ok>Spending rules are enforced by the Orvynn contract, not by this website.</Fact>
             <Fact ok>The contract has no administrator, pause switch or upgrade path. Each lease is controlled by the wallet that created it.</Fact>
-            <Fact ok={false}>An independent security audit of the contract has not been completed.</Fact>
+            <Fact ok={false}>Not audited: an independent security audit of the contract has not been completed.</Fact>
             <Fact ok={contractConfigured}> {network.chainId === undefined
               ? contractConfigured
                 ? 'A contract deployment is configured for a supported Arc network. Connect a wallet to resolve the active network and enable contract reads and wallet-signed actions.'
