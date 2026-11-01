@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <radialGradient id="glow" cx="78%" cy="28%" r="68%"><stop offset="0" stop-color="#355987" stop-opacity=".55"/><stop offset="1" stop-color="#0B1427" stop-opacity="0"/></radialGradient>
+    <linearGradient id="line" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#A9C8F0" stop-opacity=".5"/><stop offset="1" stop-color="#A9C8F0" stop-opacity="0"/></linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="#0B1427"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <circle cx="1000" cy="145" r="245" fill="none" stroke="#FFFFFF" stroke-opacity=".08"/>
+  <circle cx="1000" cy="145" r="185" fill="none" stroke="#FFFFFF" stroke-opacity=".07"/>
+  <circle cx="1000" cy="145" r="125" fill="none" stroke="#FFFFFF" stroke-opacity=".06"/>
+  <path d="M720 0L1200 480M830 0L1200 370" stroke="url(#line)" stroke-width="1"/>
+  <g transform="translate(92 86)">
+    <rect width="76" height="76" rx="21" fill="#FFFFFF"/>
+    <g transform="translate(7.75 10.75) scale(.75)" fill="#111827">
+      <path d="M30.5 30.5V6.5A24 24 0 0 0 6.5 30.5Z"/>
+      <path d="M37.5 26.5H61.5A24 24 0 0 0 37.5 2.5Z"/>
+      <path d="M33.5 33.5V57.5A24 24 0 0 0 57.5 33.5Z"/>
+      <path d="M30.5 33.5H6.5A24 24 0 0 0 30.5 57.5Z"/>
+    </g>
+  </g>
+  <text x="190" y="137" fill="#FFFFFF" font-family="Inter,Arial,sans-serif" font-size="43" font-weight="650" letter-spacing="5">ORVYNN</text>
+  <text x="94" y="310" fill="#FFFFFF" font-family="Inter,Arial,sans-serif" font-size="67" font-weight="500" letter-spacing="-2">Spending limits</text>
+  <text x="94" y="390" fill="#FFFFFF" font-family="Inter,Arial,sans-serif" font-size="67" font-weight="500" letter-spacing="-2">for AI agents.</text>
+  <text x="98" y="452" fill="#B9C7DA" font-family="Inter,Arial,sans-serif" font-size="25" font-weight="400">USDC permissions, enforced by smart contracts on Arc.</text>
+  <rect x="94" y="520" width="205" height="42" rx="21" fill="#FFFFFF" fill-opacity=".08" stroke="#FFFFFF" stroke-opacity=".18"/>
+  <circle cx="117" cy="541" r="5" fill="#9BC4F2"/>
+  <text x="134" y="547" fill="#DCE8F8" font-family="Inter,Arial,sans-serif" font-size="15" font-weight="600" letter-spacing="2">BUILT FOR ARC</text>
+</svg>
