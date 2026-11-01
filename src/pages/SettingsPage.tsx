@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Check, X, Wallet, Network, SlidersHorizontal, ShieldCheck, Info } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useAccount, useChains } from 'wagmi'
+import { arc, arcTestnet } from 'viem/chains'
 import { Badge, Card, CardHeader, PageHeader } from '@/components/ui'
 import { InfoList, InfoRow } from '@/components/agentpay/Notices'
 import { BRAND } from '@/lib/brand'
@@ -44,7 +45,11 @@ export function SettingsPage() {
   const network = useNetworkInfo()
   const chains = useChains()
   const contractAddress = getAgentPayAddress(network.chainId)
-  const contractConfigured = Boolean(contractAddress)
+  const mainnetAddress = getAgentPayAddress(arc.id)
+  const testnetAddress = getAgentPayAddress(arcTestnet.id)
+  const contractConfigured = network.chainId !== undefined
+    ? Boolean(contractAddress)
+    : Boolean(mainnetAddress || testnetAddress)
 
   return (
     <div className="space-y-6 md:space-y-8">
@@ -98,7 +103,13 @@ export function SettingsPage() {
             <Fact ok>Spending rules are enforced by the Orvynn contract, not by this website.</Fact>
             <Fact ok>The contract has no administrator, pause switch or upgrade path. Each lease is controlled by the wallet that created it.</Fact>
             <Fact ok={false}>An independent security audit of the contract has not been completed.</Fact>
-            <Fact ok={contractConfigured}> {contractConfigured ? 'A contract address is configured for the selected Arc network. Contract reads and wallet-signed actions are available when connected.' : 'No Orvynn contract address is configured for the selected Arc network; contract reads and transactions remain unavailable.'}</Fact>
+            <Fact ok={contractConfigured}> {network.chainId === undefined
+              ? contractConfigured
+                ? 'A contract deployment is configured for a supported Arc network. Connect a wallet to resolve the active network and enable contract reads and wallet-signed actions.'
+                : 'No Orvynn contract address is configured for Arc Mainnet or Arc Testnet; contract reads and transactions remain unavailable.'
+              : contractAddress
+                ? 'A contract address is configured for the selected Arc network. Contract reads and wallet-signed actions are available when connected.'
+                : 'No Orvynn contract address is configured for the selected Arc network; contract reads and transactions remain unavailable.'}</Fact>
           </ul>
         </Section>
       </div>
@@ -108,7 +119,16 @@ export function SettingsPage() {
           <InfoRow label="Product">{BRAND.name}</InfoRow>
           <InfoRow label="Purpose">{BRAND.tagline}</InfoRow>
           <InfoRow label="Stage">Prototype.</InfoRow>
-          <InfoRow label="Contract">{contractAddress ? <span className="num font-mono text-support" title={contractAddress}>{shortAddress(contractAddress)}</span> : <>Not configured</>}</InfoRow>
+          <InfoRow label="Contract">
+            {network.chainId !== undefined
+              ? contractAddress
+                ? <span className="num font-mono text-support" title={contractAddress}>{shortAddress(contractAddress)}</span>
+                : 'Not configured for this network'
+              : mainnetAddress
+                ? <span className="num font-mono text-support" title={mainnetAddress}>Arc Mainnet: {shortAddress(mainnetAddress)}</span>
+                : testnetAddress
+                  ? <span className="num font-mono text-support" title={testnetAddress}>Arc Testnet: {shortAddress(testnetAddress)}</span>
+                  : 'Not configured'}</InfoRow>
           <InfoRow label="Wallet connections">
             Browser wallets, Coinbase Wallet{walletConnectEnabled ? ', WalletConnect' : ' (WalletConnect not configured)'}
           </InfoRow>
