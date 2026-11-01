@@ -102,25 +102,24 @@ export function AppShell({ nav, activeId, onNavigate, sidebarFooter, topBarActio
       </header>
       <div className="md:pl-[var(--ap-sidebar-rail)] lg:pl-[var(--ap-sidebar-wide)] xl:pl-[var(--ap-sidebar-wider)]">
         <main id="main" className="page-wash min-h-dvh bg-canvas">
-          <div className="mx-auto w-full max-w-[1200px] px-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pt-6 sm:px-6 md:px-8 md:pb-24 md:pt-8 xl:max-w-[1360px] xl:px-10">
+          <div className="mx-auto w-full max-w-[1200px] px-4 pb-8 pt-6 pl-[calc(1rem+4.25rem)] sm:px-6 sm:pl-[calc(1.5rem+4.25rem)] md:px-8 md:pb-24 md:pl-8 md:pt-8 xl:max-w-[1360px] xl:px-10">
             {topBarActions && <div className="mb-6 hidden justify-end md:flex">{actions('light')}</div>}
             {children}
             <footer className="mt-10 border-t border-line px-1 py-6 text-support text-ink-soft sm:px-2"><p>{BRAND.name} — {BRAND.tagline}</p><p className="mt-1">Built for Arc. USDC spending limits enforced by smart contract.<a className="ml-2 underline hover:text-ink" href={BRAND.repoUrl} target="_blank" rel="noreferrer">Source</a></p></footer>
           </div>
         </main>
       </div>
-      <nav aria-label="Primary navigation" className="fixed inset-x-0 bottom-0 z-40 border-t border-[#DCE6F2] bg-white/95 shadow-[0_-10px_30px_rgba(23,41,75,0.09)] backdrop-blur-xl pb-[env(safe-area-inset-bottom)] md:hidden">
-        <ul className="mx-auto grid max-w-xl grid-cols-6 px-1">
+      <nav aria-label="Primary navigation" className="fixed inset-y-14 left-0 z-40 w-[4.25rem] border-r border-[#DCE6F2] bg-white/95 shadow-[8px_0_24px_rgba(23,41,75,0.06)] backdrop-blur-xl pb-[env(safe-area-inset-bottom)] md:hidden">
+        <ul className="flex h-full flex-col items-stretch gap-1 overflow-y-auto px-1.5 py-3">
           {nav.map(({ id, label, icon: Icon }) => {
             const active = id === activeId
             return (
               <li key={id} className="min-w-0">
-                <button type="button" onClick={() => onNavigate(id)} aria-current={active ? 'page' : undefined} aria-label={label}
-                  className={cn('relative flex min-h-[4.5rem] w-full flex-col items-center justify-center gap-1.5 px-0.5 py-2 text-[9px] font-semibold leading-none transition-colors active:scale-[.96] sm:text-[10px]', active ? 'text-brand-navy' : 'text-ink-mute hover:text-brand-navy')}>
-                  {active && <span className="absolute inset-x-2 top-1.5 h-8 rounded-xl bg-[#EAF2FC]" aria-hidden />}
-                  <Icon className={cn('relative z-10 size-[1.2rem] shrink-0 transition-transform sm:size-5', active && 'scale-105 stroke-[2.4] text-brand-blue')} aria-hidden />
-                  <span className="relative z-10 max-w-full truncate">{label}</span>
-                  {active && <span className="absolute bottom-1 h-0.5 w-5 rounded-full bg-brand-blue" aria-hidden />}
+                <button type="button" onClick={() => onNavigate(id)} aria-current={active ? 'page' : undefined} aria-label={label} title={label}
+                  className={cn('relative flex min-h-[4.25rem] w-full flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 text-[9px] font-semibold leading-tight transition-colors active:scale-[.97]', active ? 'bg-[#EAF2FC] text-brand-navy' : 'text-ink-mute hover:bg-[#F5F8FC] hover:text-brand-navy')}>
+                  {active && <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-brand-blue" aria-hidden />}
+                  <Icon className={cn('size-5 shrink-0 transition-transform', active && 'scale-105 stroke-[2.4] text-brand-blue')} aria-hidden />
+                  <span className="max-w-full text-center">{label}</span>
                 </button>
               </li>
             )
