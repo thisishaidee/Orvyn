@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Check, X, Wallet, Network, SlidersHorizontal, ShieldCheck, Info } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { useAccount, useChains } from 'wagmi'
+import { useAccount } from 'wagmi'
 import { arc, arcTestnet } from 'viem/chains'
 import { Badge, Card, CardHeader, PageHeader } from '@/components/ui'
 import { InfoList, InfoRow } from '@/components/agentpay/Notices'
@@ -43,7 +43,6 @@ function Fact({ ok, children }: { ok: boolean; children: ReactNode }) {
 export function SettingsPage() {
   const { address, isConnected, connector } = useAccount()
   const network = useNetworkInfo()
-  const chains = useChains()
   const contractAddress = getAgentPayAddress(network.chainId)
   const mainnetAddress = getAgentPayAddress(arc.id)
   const testnetAddress = getAgentPayAddress(arcTestnet.id)
