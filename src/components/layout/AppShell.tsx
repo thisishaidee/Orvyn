@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { ArrowUpRight, Github, Menu, X, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { BRAND } from '@/lib/brand'
