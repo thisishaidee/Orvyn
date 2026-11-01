@@ -77,14 +77,14 @@ export function SettingsPage() {
 
         <Section title="Selected network" icon={Network}>
           <InfoList>
-            <InfoRow label="Wallet network" hint={network.chainId !== undefined ? `Chain ID ${network.chainId}` : undefined}>
+            <InfoRow label="Wallet network">
               {network.label}
             </InfoRow>
             <InfoRow label="Supported by this app">
               {isConnected ? <Badge tone={network.supported ? 'success' : 'warning'}>{network.supported ? 'Yes' : 'No'}</Badge> : <span className="text-ink-mute">Not applicable</span>}
             </InfoRow>
             <InfoRow label="Networks this app can use" hint="Arc Mainnet and Arc Testnet only.">
-              {chains.map((c) => `${c.name} (${c.id})`).join(', ')}
+              Arc Mainnet, Arc Testnet
             </InfoRow>
           </InfoList>
         </Section>
