@@ -38,11 +38,8 @@ interface SidebarContentProps {
 
 function SidebarContent({ nav, activeId, onNavigate, footer }: SidebarContentProps) {
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex h-16 shrink-0 items-center px-5">
-        <BrandMark className="text-white" />
-      </div>
-      <nav aria-label="Main navigation" className="flex-1 overflow-y-auto px-3 py-2">
+    <div className="flex h-full min-h-0 flex-col">
+      <nav aria-label="Main navigation" className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-2">
         <ul className="space-y-1">
           {nav.map(({ id, label, icon: Icon }) => {
             const active = id === activeId
@@ -77,11 +74,21 @@ export function AppShell({ nav, activeId, onNavigate, sidebarFooter, topBarActio
   const actions = (tone: 'dark' | 'light') => (typeof topBarActions === 'function' ? topBarActions(tone) : topBarActions)
   useEffect(() => {
     if (!mobileMenuOpen) return
+
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setMobileMenuOpen(false)
     }
+    const previousBodyOverflow = document.body.style.overflow
+    const previousHtmlOverflow = document.documentElement.style.overflow
+    document.body.style.overflow = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
     window.addEventListener('keydown', closeOnEscape)
-    return () => window.removeEventListener('keydown', closeOnEscape)
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow
+      document.documentElement.style.overflow = previousHtmlOverflow
+      window.removeEventListener('keydown', closeOnEscape)
+    }
   }, [mobileMenuOpen])
 
   const handleNavigate = (id: string) => {
@@ -112,7 +119,7 @@ export function AppShell({ nav, activeId, onNavigate, sidebarFooter, topBarActio
         </div>
       </aside>
 
-      <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-white/10 bg-brand-navy bg-navy-gradient px-4 text-white md:hidden">
+      <header className="sticky top-0 z-30 flex h-[calc(3.5rem+env(safe-area-inset-top))] items-center justify-between border-b border-white/10 bg-brand-navy bg-navy-gradient px-4 pt-[env(safe-area-inset-top)] text-white md:hidden">
         <BrandMark className="min-w-0 text-white" />
         <div className="flex shrink-0 items-center gap-2">
           {topBarActions && <div>{actions('dark')}</div>}
@@ -134,7 +141,7 @@ export function AppShell({ nav, activeId, onNavigate, sidebarFooter, topBarActio
           type="button"
           aria-label="Close navigation menu"
           onClick={() => setMobileMenuOpen(false)}
-          className="fixed inset-14 z-40 bg-[#101D35]/45 backdrop-blur-[2px] md:hidden"
+          className="fixed inset-x-0 bottom-0 top-[calc(3.5rem+env(safe-area-inset-top))] z-40 bg-[#101D35]/45 backdrop-blur-[2px] md:hidden"
         />
       )}
       <aside
@@ -142,7 +149,7 @@ export function AppShell({ nav, activeId, onNavigate, sidebarFooter, topBarActio
         aria-label="Mobile navigation"
         aria-hidden={!mobileMenuOpen}
         className={cn(
-          'fixed inset-y-14 left-0 z-50 w-[min(18rem,86vw)] border-r border-white/10 bg-brand-navy bg-navy-gradient text-white shadow-2xl transition-transform duration-300 ease-out md:hidden',
+          'fixed bottom-0 left-0 top-[calc(3.5rem+env(safe-area-inset-top))] z-50 w-[min(18rem,86vw)] overflow-y-auto overscroll-contain border-r border-white/10 bg-brand-navy bg-navy-gradient text-white shadow-2xl transition-transform duration-300 ease-out md:hidden',
           mobileMenuOpen ? 'visible translate-x-0' : 'invisible -translate-x-full pointer-events-none',
         )}
       >
