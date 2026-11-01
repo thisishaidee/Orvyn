@@ -2,7 +2,7 @@
 
 Orvynn is a self-custody USDC spending-lease application for AI-agent delegates on Arc. A wallet owner creates a lease with a delegate, a per-period spending cap, an expiry, and an optional recipient allowlist. The delegate can spend only within those rules; the owner can add funds, update recipient permissions, revoke the lease, or withdraw the remaining balance.
 
-The on-chain core is the AgentPay smart contract, deployed on Arc Mainnet.
+The on-chain core is the Orvynn smart contract (named AgentPay in the code), deployed on Arc Mainnet.
 
 Built with [Arc Studio](https://studio.arc.io).
 
@@ -62,7 +62,7 @@ After deployment, verify the contract address and transaction on the Arc Mainnet
 
 ## Verified Arc Mainnet deployment
 
-- AgentPay contract: [`0xA549B60313A86288d46323e5723AAa4c0fAA6363`](https://explorer.arc.io/address/0xA549B60313A86288d46323e5723AAa4c0fAA6363)
+- Orvynn contract (AgentPay): [`0xA549B60313A86288d46323e5723AAa4c0fAA6363`](https://explorer.arc.io/address/0xA549B60313A86288d46323e5723AAa4c0fAA6363)
 - Deployment transaction: [`0x7714b5ae3b3208e80c108a10866b52083d0304391d4d0984cea54928f8021ac7`](https://explorer.arc.io/tx/0x7714b5ae3b3208e80c108a10866b52083d0304391d4d0984cea54928f8021ac7)
 - Chain ID: `5042`
 - USDC: `0x3600000000000000000000000000000000000000` (6 decimals)
@@ -78,6 +78,6 @@ The POST endpoint requires the `AGENT_API_TOKEN` Cloudflare Pages secret. It nev
 
 ## Security
 
-Orvynn is self-custody: wallet actions require explicit confirmation by the connected wallet. USDC approval and AgentPay funding are separate transactions. The contract has no global administrator or upgrade path.
+Orvynn is self-custody: wallet actions require explicit confirmation by the connected wallet. USDC approval and lease funding are separate transactions. The contract has no global administrator or upgrade path.
 
 Passing automated tests is not an independent security audit. Do not represent the contract as professionally audited unless an independent audit has been completed.

@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "private": true,
   "type": "module",
-  "description": "A read-only Arc payment-request agent for Orvynn AgentPay; delegate wallet signs separately.",
+  "description": "A read-only Arc payment-request agent for Orvynn; delegate wallet signs separately.",
   "scripts": {
     "dev": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",

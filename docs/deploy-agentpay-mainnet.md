@@ -1,4 +1,4 @@
-# Deploy AgentPay to Arc Mainnet
+# Deploy the Orvynn contract (AgentPay) to Arc Mainnet
 
 This guide uses the Ledger-based deployment script. **Never put a recovery phrase or private key in chat, GitHub, a project agent, or a committed file.** The old `DEPLOYER_PRIVATE_KEY` instructions are obsolete.
 
@@ -6,7 +6,7 @@ This guide uses the Ledger-based deployment script. **Never put a recovery phras
 
 - Arc Mainnet chain ID: `5042`
 - RPC: `https://rpc.mainnet.arc.io`
-- AgentPay USDC ERC-20: `0x3600000000000000000000000000000000000000`
+- USDC ERC-20 used by the Orvynn contract: `0x3600000000000000000000000000000000000000`
 - USDC ERC-20 decimals: `6`
 - Expected deployer: `0xCB2A51B4D34cC6f5dd574F7b5BfA8260E4201C55`
 
@@ -78,4 +78,4 @@ After an explicitly approved deployment, verify the transaction and contract on 
 
 ## Security note
 
-AgentPay has no global administrator or upgrade path. A deployment is permanent. Obtain an independent professional security review before handling real funds; passing project tests is not a security audit.
+The Orvynn contract has no global administrator or upgrade path. A deployment is permanent. Obtain an independent professional security review before handling real funds; passing project tests is not a security audit.

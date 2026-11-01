@@ -1,5 +1,5 @@
 /**
- * wagmi configuration for AgentPay
+ * wagmi configuration for Orvynn
  * Supported networks: Arc Mainnet (5042) and Arc Testnet (5042002)
  * Built with Arc Studio — https://studio.arc.io
  */

@@ -74,7 +74,7 @@ export function NetworkSwitcher() {
       {errorMessage && <p className="text-support text-danger">{errorMessage}</p>}
       {!isSupportedChain(chainId) && (
         <p className="text-support text-warning">
-          You are on {network.label}. Switch to Arc Mainnet or Arc Testnet to use AgentPay.
+          You are on {network.label}. Switch to Arc Mainnet or Arc Testnet to use Orvynn.
         </p>
       )}
     </div>

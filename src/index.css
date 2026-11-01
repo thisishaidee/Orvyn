@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* AgentPay design tokens: the ONE place the palette is defined (RGB channels).
+/* Orvynn design tokens: the ONE place the palette is defined (RGB channels).
    tailwind.config.js reads these, so utilities, gradients and raw CSS can never drift apart. */
 :root {
   --ap-navy: 23 41 75; /* #17294B primary navy */

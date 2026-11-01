@@ -1,6 +1,6 @@
 # Orvynn Agent API
 
-A restricted Arc Mainnet payment-request service for Orvynn AgentPay. It gives an AI agent a narrow capability: ask Orvynn whether a proposed lease payment is valid and receive a structured intent for the delegate wallet to review.
+A restricted Arc Mainnet payment-request service for Orvynn. It gives an AI agent a narrow capability: ask Orvynn whether a proposed lease payment is valid and receive a structured intent for the delegate wallet to review.
 
 ## Flow
 
