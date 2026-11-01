@@ -21,6 +21,14 @@ function PermissionRow({ label, children, hint, inContract = true, inApp = true 
 
 export function PermissionsSection({ lease }: { lease?: Lease }) {
   const status = lease ? leaseStatus(lease) : undefined
+  if (!lease) {
+    return (
+      <Card>
+        <CardHeader title="Permissions" description="Lease rules and recipient permissions." />
+        <p className="text-support text-ink-soft">No lease selected. Select a lease above to view its spending cap, period, expiry and approved recipients.</p>
+      </Card>
+    )
+  }
   return (
     <Card>
       <CardHeader title="Permissions" description="What the agent is allowed to do under this lease. The contract enforces these rules." />
