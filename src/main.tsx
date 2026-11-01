@@ -37,7 +37,7 @@ const StudioWatermark = () => (
     href="https://studio.arc.io/"
     target="_blank"
     rel="noopener noreferrer"
-    className="fixed bottom-24 right-3 z-30 flex items-center gap-1.5 rounded-full border border-white/40 bg-[rgba(172,198,233,.9)] px-2.5 py-1.5 text-[10px] font-semibold text-[#1B3158] shadow-card backdrop-blur-xl md:bottom-4 md:right-4 md:gap-1.5 md:px-3.5 md:py-2 md:text-xs",
+    className="fixed bottom-24 right-3 z-30 flex items-center gap-1.5 rounded-full border border-white/40 bg-[rgba(172,198,233,.9)] px-2.5 py-1.5 text-[10px] font-semibold text-[#1B3158] shadow-card backdrop-blur-xl md:bottom-4 md:right-4 md:gap-1.5 md:px-3.5 md:py-2 md:text-xs"
     style={{
       position: 'fixed',
       textDecoration: 'none',
