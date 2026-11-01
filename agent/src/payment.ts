@@ -3,6 +3,7 @@ import { formatUnits, type Address } from "viem";
 import { agentPayAbi } from "./agentpay-abi.js";
 import { agentPayAddress, publicClient } from "./chain.js";
 import { validatePaymentInput } from "./payment-validation.js";
+import { assertLeasePaymentAllowed } from "./lease-payment-guards.js";
 
 /**
  * A validated payment intent. It is data for the connected delegate wallet
@@ -50,28 +51,32 @@ export async function prepareLeasePayment(request: PaymentRequest): Promise<Prep
   ]);
   const [owner, registeredDelegate, , , expiry, , , , balance, allowlistEnabled, revoked] = lease;
 
-  if (owner === "0x0000000000000000000000000000000000000000") {
-    throw new Error("Lease does not exist.");
-  }
-  if (registeredDelegate.toLowerCase() !== input.delegate.toLowerCase()) {
-    throw new Error("The supplied wallet is not the delegate registered for this lease.");
-  }
-  if (revoked) throw new Error("Lease has been revoked.");
-  if (latestBlock.timestamp >= expiry) throw new Error("Lease has expired.");
-  if (input.amount > balance) throw new Error("Payment exceeds the USDC currently deposited in the lease.");
-  if (input.amount > allowance) {
-    throw new Error(`Payment exceeds remaining lease allowance (${formatUnits(allowance, 6)} USDC).`);
-  }
-
+  let recipientAllowed = false;
   if (allowlistEnabled) {
-    const allowed = await publicClient.readContract({
+    recipientAllowed = await publicClient.readContract({
       address: agentPayAddress,
       abi: agentPayAbi,
       functionName: "allowedRecipients",
       args: [input.leaseId, input.recipient]
     });
-    if (!allowed) throw new Error("Recipient is not on this lease's allowlist.");
   }
+
+  assertLeasePaymentAllowed({
+    lease: {
+      owner,
+      delegate: registeredDelegate,
+      expiry,
+      revoked,
+      balance,
+      remainingAllowance: allowance,
+      allowlistEnabled,
+      recipientAllowed
+    },
+    suppliedDelegate: input.delegate,
+    recipient: input.recipient,
+    amount: input.amount,
+    nowSeconds: latestBlock.timestamp
+  });
 
   // Simulate the exact call to catch contract-level reverts before asking the
   // delegate wallet to sign. Simulation is read-only and sends no transaction.
