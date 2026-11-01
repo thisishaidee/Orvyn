@@ -256,20 +256,37 @@ async function discoverActivity(
   const leaseIds = leases.map((l) => BigInt(l.id))
   const byId = new Map(leases.map((l) => [l.id, l]))
 
-  const [created, deposited, withdrawn, spent, revoked, allowlist] = await Promise.all([
-    getLogsChunked(client, { address: contract, event: eventAbi('LeaseCreated') as never, args: { owner }, fromBlock }),
-    getLogsChunked(client, { address: contract, event: eventAbi('Deposited') as never, args: { owner }, fromBlock }),
-    getLogsChunked(client, { address: contract, event: eventAbi('Withdrawn') as never, args: { owner }, fromBlock }),
-    leaseIds.length
-      ? getLogsChunked(client, { address: contract, event: eventAbi('Spent') as never, fromBlock })
-      : Promise.resolve([]),
-    leaseIds.length
-      ? getLogsChunked(client, { address: contract, event: eventAbi('Revoked') as never, fromBlock })
-      : Promise.resolve([]),
-    leaseIds.length
-      ? getLogsChunked(client, { address: contract, event: eventAbi('AllowlistUpdated') as never, fromBlock })
-      : Promise.resolve([]),
-  ])
+  if (leaseIds.length === 0) return []
+
+  // Every event exposes leaseId as an indexed field. Filter at the RPC instead
+  // of downloading every event emitted by the contract and discarding most of
+  // them in the browser. Viem encodes an array as an OR filter over topic values.
+  // Keep scans sequential to avoid bursts against Arc's public RPC.
+  const leaseIdFilter = { leaseId: leaseIds }
+  const created = await getLogsChunked(client, {
+    address: contract, event: eventAbi('LeaseCreated') as never,
+    args: { owner, ...leaseIdFilter }, fromBlock,
+  })
+  const deposited = await getLogsChunked(client, {
+    address: contract, event: eventAbi('Deposited') as never,
+    args: { owner, ...leaseIdFilter }, fromBlock,
+  })
+  const withdrawn = await getLogsChunked(client, {
+    address: contract, event: eventAbi('Withdrawn') as never,
+    args: { owner, ...leaseIdFilter }, fromBlock,
+  })
+  const spent = await getLogsChunked(client, {
+    address: contract, event: eventAbi('Spent') as never,
+    args: leaseIdFilter, fromBlock,
+  })
+  const revoked = await getLogsChunked(client, {
+    address: contract, event: eventAbi('Revoked') as never,
+    args: leaseIdFilter, fromBlock,
+  })
+  const allowlist = await getLogsChunked(client, {
+    address: contract, event: eventAbi('AllowlistUpdated') as never,
+    args: leaseIdFilter, fromBlock,
+  })
 
   const owned = new Set(leaseIds.map((id) => id.toString()))
   const relevant = [...created, ...deposited, ...withdrawn, ...spent, ...revoked, ...allowlist].filter((log) => {
