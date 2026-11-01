@@ -1,5 +1,5 @@
-import { History } from 'lucide-react'
-import { Card, CardHeader, DataTable, PageHeader, StatusBadge, type Column } from '@/components/ui'
+import { History, ArrowDownLeft, ArrowUpRight, ShieldCheck, Activity as ActivityIcon } from 'lucide-react'
+import { Card, CardHeader, DataTable, PageHeader, StatusBadge, StatCard, type Column } from '@/components/ui'
 import { NotConnectedNotice } from '@/components/agentpay/Notices'
 import { SourceEmpty } from '@/components/agentpay/SourceEmpty'
 import {
@@ -52,11 +52,17 @@ export function ActivityPage() {
         title="Activity"
         description="A record of everything that happened on your leases: payments, deposits, withdrawals and revocations."
       />
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard label="Events loaded" value={source.state === 'ready' ? source.items.length : undefined} icon={<ActivityIcon className="size-4" />} hint="Contract activity in this view" />
+        <StatCard label="Payments" value={source.state === 'ready' ? source.items.filter((a) => a.type === 'Spent').length : undefined} icon={<ArrowUpRight className="size-4" />} hint="Agent spending events" />
+        <StatCard label="Deposits" value={source.state === 'ready' ? source.items.filter((a) => a.type === 'Deposited').length : undefined} icon={<ArrowDownLeft className="size-4" />} hint="Funds added to leases" />
+        <StatCard label="Revocations" value={source.state === 'ready' ? source.items.filter((a) => a.type === 'Revoked').length : undefined} icon={<ShieldCheck className="size-4" />} hint="Access removed" />
+      </div>
       <NotConnectedNotice subject="Activity" />
 
-      <Card padding="none">
-        <div className="p-4 pb-0 sm:p-5 sm:pb-0 lg:p-6 lg:pb-0">
-          <CardHeader title="Transaction history" className="mb-0" />
+      <Card padding="none" className="overflow-hidden">
+        <div className="border-b border-line bg-gradient-to-r from-brand-mist/70 to-transparent p-4 sm:p-5 lg:p-6">
+          <CardHeader title="Transaction history" description="An on-chain record of lease funding, spending and permission changes." className="mb-0" />
         </div>
         <DataTable
           caption="Transaction history"
