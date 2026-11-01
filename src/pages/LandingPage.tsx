@@ -25,7 +25,7 @@ function FeatureArt({ tone }: { tone: string }) {
     teal: 'from-[#147D83] via-[#69B8B4] to-[#E0F0EA]',
     violet: 'from-[#7D83C8] via-[#B7BCE8] to-[#F0EFFA]',
   }
-  return <div className={`relative hidden h-40 overflow-hidden bg-gradient-to-br ${tones[tone]} sm:block sm:h-44`}>
+  return <div className={`relative h-40 overflow-hidden bg-gradient-to-br ${tones[tone]} sm:h-44`}>
     <div className="absolute -right-8 -top-16 size-64 rounded-full border border-white/40 bg-white/10 shadow-[inset_0_0_55px_rgba(255,255,255,.3)]" />
     <div className="absolute -bottom-32 left-8 h-64 w-[78%] rotate-[-18deg] rounded-[48%] border border-white/50 bg-white/10 shadow-[0_0_60px_rgba(255,255,255,.25)]" />
     <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white" />
@@ -59,7 +59,7 @@ export function LandingPage({ onLaunch }: { onLaunch: () => void }) {
             <p className="mt-5 text-xs leading-5 text-ink-mute">On-chain spending rules. Owner-controlled leases. USDC on Arc.</p>
           </div>
 
-          <div className="relative mx-auto hidden w-full max-w-[620px] sm:block">
+          <div className="relative mx-auto w-full max-w-[620px]">
             <div className="absolute -inset-5 rounded-[2rem] bg-[radial-gradient(ellipse,rgba(112,159,216,.24),transparent_70%)] blur-2xl" />
             <article className="relative isolate overflow-hidden rounded-[28px] bg-[#0E0E0F] text-white shadow-[0_28px_80px_rgba(23,41,75,.2)]">
               <div className="relative h-[220px] overflow-hidden sm:h-[270px] lg:h-[300px]">
