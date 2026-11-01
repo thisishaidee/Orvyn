@@ -9,6 +9,7 @@ import { useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import {
   erc20Abi,
+  isAddress,
   type Address,
   type Hash,
 } from 'viem'
@@ -188,6 +189,7 @@ export function useAgentPayTransactions() {
       throw new Error('The active signer does not match the connected delegate wallet.')
     }
     if (chainId !== 5042) throw new Error('Agent payment requests are currently supported on Arc Mainnet only.')
+    if (!isAddress(recipient)) throw new Error('Recipient must be a valid wallet address.')
     if (recipient.toLowerCase() === '0x0000000000000000000000000000000000000000') {
       throw new Error('Recipient cannot be the zero address.')
     }
