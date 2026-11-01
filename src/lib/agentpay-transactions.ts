@@ -18,6 +18,7 @@ import { ARC_USDC_ADDRESS } from '@/lib/wallet'
 import { useReadGate } from '@/lib/agentpay-reads'
 import { agentPayAbi as agentPayReadAbi } from '@/lib/agentpay-abi'
 import { validatePaymentInput } from '../../agent/src/payment-validation'
+import { assertLeasePaymentAllowed } from '../../agent/src/lease-payment-guards'
 import { agentPayWriteAbi } from '@/lib/agentpay-write-abi'
 
 export type TransactionResult = {
@@ -216,24 +217,30 @@ export function useAgentPayTransactions() {
     ])
     const [owner, registeredDelegate, , , expiry, , , , balance, allowlistEnabled, revoked] = lease
 
-    if (owner === '0x0000000000000000000000000000000000000000') throw new Error('Lease does not exist.')
-    if (registeredDelegate.toLowerCase() !== account.toLowerCase()) {
-      throw new Error('The connected wallet is not the delegate registered for this lease.')
-    }
-    if (revoked) throw new Error('This lease has been revoked.')
-    if (latestBlock.timestamp >= expiry) throw new Error('This lease has expired.')
-    if (amount > balance) throw new Error('Payment exceeds the USDC deposited in this lease.')
-    if (amount > allowance) throw new Error('Payment exceeds the remaining lease allowance.')
+    const recipientAllowed = allowlistEnabled
+      ? await publicClient.readContract({
+          address: contract,
+          abi: agentPayReadAbi,
+          functionName: 'allowedRecipients',
+          args: [leaseId, recipient],
+        })
+      : false
 
-    if (allowlistEnabled) {
-      const allowed = await publicClient.readContract({
-        address: contract,
-        abi: agentPayReadAbi,
-        functionName: 'allowedRecipients',
-        args: [leaseId, recipient],
-      })
-      if (!allowed) throw new Error('Recipient is not approved by this lease allowlist.')
-    }
+    assertLeasePaymentAllowed({
+      lease: {
+        owner,
+        delegate: registeredDelegate,
+        expiry,
+        revoked,
+        balance,
+        remainingAllowance: allowance,
+        allowlistEnabled,
+        recipientAllowed,
+      },
+      suppliedDelegate: account,
+      amount,
+      nowSeconds: latestBlock.timestamp,
+    })
 
     // Simulate the exact spend call. This is read-only; walletClient still
     // requires the delegate to approve the actual transaction.
