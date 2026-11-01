@@ -16,11 +16,10 @@ export type LeasePaymentState = {
 export function assertLeasePaymentAllowed(input: {
   lease: LeasePaymentState;
   suppliedDelegate: Address;
-  recipient: Address;
   amount: bigint;
   nowSeconds: bigint;
 }): void {
-  const { lease, suppliedDelegate, recipient, amount, nowSeconds } = input;
+  const { lease, suppliedDelegate, amount, nowSeconds } = input;
 
   if (lease.owner.toLowerCase() === ZERO_ADDRESS) {
     throw new Error("Lease does not exist.");
@@ -39,7 +38,4 @@ export function assertLeasePaymentAllowed(input: {
   if (lease.allowlistEnabled && !lease.recipientAllowed) {
     throw new Error("Recipient is not on this lease's allowlist.");
   }
-  // Keep these parameters explicit: the recipient is part of the policy
-  // decision and is checked against the on-chain allowlist by the caller.
-  void recipient;
 }
