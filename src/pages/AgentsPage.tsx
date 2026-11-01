@@ -78,7 +78,7 @@ export function AgentsPage() {
         </div>
       </Card>
       <Card>
-        <CardHeader title="How agents work in AgentPay" description="Three steps from authorization to controlled spending." />
+        <CardHeader title="How agents work in Orvynn" description="Three steps from authorization to controlled spending." />
         <ol className="space-y-3">
           {STEPS.map((step, i) => (
             <li key={step} className="flex gap-3 text-body">
