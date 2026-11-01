@@ -1,15 +1,13 @@
 {
   "name": "@orvynn/minimal-agent",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
-  "description": "A restricted Arc agent that can request USDC payments through Orvynn AgentPay.",
+  "description": "A read-only Arc payment-request agent for Orvynn AgentPay; delegate wallet signs separately.",
   "scripts": {
     "dev": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
-    "check": "tsx src/index.ts",
-    "wallet:create": "tsx src/create-wallet.ts",
-    "payment:approve": "tsx src/approve-payment.ts"
+    "check": "tsx src/index.ts"
   },
   "dependencies": {
     "dotenv": "^16.4.7",
