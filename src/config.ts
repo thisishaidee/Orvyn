@@ -4,7 +4,8 @@
  * Built with Arc Studio — https://studio.arc.io
  */
 
-import { http, createConfig } from 'wagmi'
+import { fallback, http } from 'viem'
+import { createConfig } from 'wagmi'
 import { arc, arcTestnet } from 'viem/chains'
 import { coinbaseWallet, injected, walletConnect } from 'wagmi/connectors'
 import { registerChain } from './tracing'
@@ -13,6 +14,14 @@ import { BRAND } from './lib/brand'
 // Pre-register chain RPC URLs so trace events show correct chain names immediately
 registerChain(arc.id, arc.rpcUrls.default.http[0])
 registerChain(arcTestnet.id, arcTestnet.rpcUrls.default.http[0])
+
+// Arc's default public RPC can throttle bursts of eth_call requests. Use an
+// independent Arc mainnet RPC first, with Circle's endpoint as a fallback.
+// Wallet-signed transactions still go through the connected wallet provider.
+const arcMainnetTransport = fallback([
+  http('https://rpc.arc-scan.org'),
+  http(arc.rpcUrls.default.http[0]),
+])
 
 // Multi-wallet support:
 // - injected(): browser-extension and in-app-browser wallets. wagmi also auto-discovers each installed
@@ -46,7 +55,7 @@ export const config = createConfig({
       : []),
   ],
   transports: {
-    [arc.id]: http(),
+    [arc.id]: arcMainnetTransport,
     [arcTestnet.id]: http(),
   },
   ssr: false,
