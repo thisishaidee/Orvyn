@@ -45,19 +45,20 @@ export async function sendLeasePayment(request: PaymentRequest) {
     functionName: "leases",
     args: [request.leaseId]
   });
+  const [owner, delegate, , , expiry, , , , , allowlistEnabled, revoked] = lease;
 
-  if (lease.owner === "0x0000000000000000000000000000000000000000") {
+  if (owner === "0x0000000000000000000000000000000000000000") {
     throw new Error("Lease does not exist.");
   }
-  if (lease.delegate.toLowerCase() !== account.address.toLowerCase()) {
+  if (delegate.toLowerCase() !== account.address.toLowerCase()) {
     throw new Error("This agent wallet is not the delegate registered for that lease.");
   }
-  if (lease.revoked) throw new Error("Lease has been revoked.");
+  if (revoked) throw new Error("Lease has been revoked.");
 
   const latestBlock = await publicClient.getBlock({ blockTag: "latest" });
-  if (latestBlock.timestamp >= lease.expiry) throw new Error("Lease has expired.");
+  if (latestBlock.timestamp >= expiry) throw new Error("Lease has expired.");
 
-  if (lease.allowlistEnabled) {
+  if (allowlistEnabled) {
     const allowed = await publicClient.readContract({
       address: agentPayAddress,
       abi: agentPayAbi,
