@@ -38,6 +38,12 @@ The generator writes a fresh private key into the local ignored `.env` file with
 
 Creating the wallet does not fund it, connect it to a lease, or send a transaction.
 
+## Restricted payment capability
+
+`src/payment.ts` exports `sendLeasePayment()`. It is the only transaction-writing capability in this package. Before signing, it checks the Arc chain ID, verifies that the configured agent wallet is the lease delegate, checks lease existence/revocation/expiry, enforces the recipient allowlist when enabled, checks the live remaining allowance, and simulates the contract call. It then submits only AgentPay `spend()` and waits for the receipt.
+
+Every call must include `confirmed: true`. This is an operator confirmation gate, not a substitute for the contract's on-chain protections. Do not connect an LLM to this function until a separate approval flow is designed and tested. The function has not been executed against a funded lease.
+
 ## Next milestone
 
-After the read-only checks pass and the owner has securely created the delegate wallet, add the restricted payment action. Connect a language model only to that action. No transaction will be sent until a separate explicit test step.
+Run the automated TypeScript and read-only network checks. Then securely create the delegate wallet locally, register its public address in a new Orvynn lease, and test a tiny payment only after the operator reviews and confirms the transaction.
