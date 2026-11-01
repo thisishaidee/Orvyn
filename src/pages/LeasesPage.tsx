@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react'
-import { KeyRound, Plus } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { useAccount } from 'wagmi'
+import { Archive, ArchiveRestore, KeyRound, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button, Card, CardHeader, ConfirmDialog, DataTable, PageHeader, ProgressBar, StatusBadge, type Column } from '@/components/ui'
 import { LeaseDetail } from '@/components/agentpay/LeaseDetail'
 import { CreateLeaseModal } from '@/components/agentpay/CreateLeaseModal'
-import { NotConnectedNotice, PendingAction } from '@/components/agentpay/Notices'
+import { NotConnectedNotice } from '@/components/agentpay/Notices'
 import { SourceEmpty } from '@/components/agentpay/SourceEmpty'
 import {
   formatDateTime,
@@ -19,16 +20,24 @@ import {
 import { cn } from '@/lib/cn'
 import { useAgentPayTransactions } from '@/lib/agentpay-transactions'
 
-type Filter = 'all' | LeaseStatus
+type Filter = 'all' | LeaseStatus | 'archived'
 const FILTERS: { id: Filter; label: string }[] = [
   { id: 'all', label: 'All' },
   { id: 'active', label: 'Active' },
   { id: 'expired', label: 'Expired' },
   { id: 'revoked', label: 'Revoked' },
+  { id: 'archived', label: 'Archived' },
 ]
+
+function archiveStorageKey(chainId?: number, address?: string) {
+  return chainId && address ? `orvynn:archived-leases:${chainId}:${address.toLowerCase()}` : null
+}
 
 export function LeasesPage() {
   const source = useLeases()
+  const { address, chainId } = useAccount()
+  const storageKey = archiveStorageKey(chainId, address)
+  const [archivedIds, setArchivedIds] = useState<Set<string>>(() => new Set())
   const [filter, setFilter] = useState<Filter>('all')
   const [selectedId, setSelectedId] = useState<string | undefined>()
   const [createOpen, setCreateOpen] = useState(false)
@@ -36,13 +45,46 @@ export function LeasesPage() {
   const [revoking, setRevoking] = useState(false)
   const transactions = useAgentPayTransactions()
 
-  const withStatus = useMemo(() => source.items.map((lease) => ({ lease, status: leaseStatus(lease) })), [source.items])
-  const rows = withStatus.filter((r) => filter === 'all' || r.status === filter)
+  useEffect(() => {
+    if (!storageKey) {
+      setArchivedIds(new Set())
+      return
+    }
+    try {
+      const stored: unknown = JSON.parse(window.localStorage.getItem(storageKey) ?? '[]')
+      setArchivedIds(new Set(Array.isArray(stored) ? stored.filter((id): id is string => typeof id === 'string') : []))
+    } catch {
+      setArchivedIds(new Set())
+      toast.error('Could not read archived leases', { description: 'Your on-chain leases are unaffected.' })
+    }
+  }, [storageKey])
+
+  const withStatus = useMemo(() => source.items.map((lease) => ({ lease, status: leaseStatus(lease), archived: archivedIds.has(lease.id) })), [source.items, archivedIds])
+  const rows = withStatus.filter((r) => filter === 'archived' ? r.archived : !r.archived && (filter === 'all' || r.status === filter))
   const selected = source.items.find((l) => l.id === selectedId)
   const ready = source.state === 'ready'
-  const count = (f: Filter) => (ready ? String(withStatus.filter((r) => f === 'all' || r.status === f).length) : '—')
+  const count = (f: Filter) => (ready ? String(withStatus.filter((r) => f === 'archived' ? r.archived : !r.archived && (f === 'all' || r.status === f)).length) : '—')
 
-  const columns: Column<{ lease: Lease; status: LeaseStatus }>[] = [
+  const setArchived = (lease: Lease, archived: boolean) => {
+    if (!storageKey) {
+      toast.error('Connect your wallet to manage archived leases.')
+      return
+    }
+    const next = new Set(archivedIds)
+    if (archived) next.add(lease.id)
+    else next.delete(lease.id)
+    try {
+      window.localStorage.setItem(storageKey, JSON.stringify([...next]))
+      setArchivedIds(next)
+      toast.success(archived ? `Lease ${lease.id} archived` : `Lease ${lease.id} restored`, {
+        description: 'This changes only your dashboard view. The on-chain lease is unchanged.',
+      })
+    } catch {
+      toast.error('Could not save this archive change', { description: 'Your on-chain lease is unaffected.' })
+    }
+  }
+
+  const columns: Column<{ lease: Lease; status: LeaseStatus; archived: boolean }>[] = [
     {
       key: 'agent',
       header: 'Agent',
@@ -75,14 +117,14 @@ export function LeasesPage() {
       key: 'actions',
       header: 'Actions',
       align: 'right',
-      cell: ({ lease }) => (
+      cell: ({ lease, archived }) => (
         <span className="inline-flex flex-wrap justify-end gap-2">
-          <Button size="sm" variant="secondary" onClick={() => setSelectedId(lease.id)}>
-            View
+          <Button size="sm" variant="secondary" onClick={() => setSelectedId(lease.id)}>View</Button>
+          <Button size="sm" variant="secondary" onClick={() => setArchived(lease, !archived)}>
+            {archived ? <ArchiveRestore className="size-3.5" aria-hidden /> : <Archive className="size-3.5" aria-hidden />}
+            {archived ? 'Restore' : 'Archive'}
           </Button>
-          <Button size="sm" variant="destructive" disabled={transactions.state !== 'ready' || leaseStatus(lease) !== 'active'} onClick={() => setRevokeTarget(lease)}>
-            Revoke
-          </Button>
+          {!archived && <Button size="sm" variant="destructive" disabled={transactions.state !== 'ready' || leaseStatus(lease) !== 'active'} onClick={() => setRevokeTarget(lease)}>Revoke</Button>}
         </span>
       ),
     },
@@ -94,9 +136,7 @@ export function LeasesPage() {
         eyebrow="Leases"
         title="Leases"
         description="A lease is a spending agreement between you and an agent: how much it may spend, how often, until when, and to whom."
-        actions={
-          <Button iconLeft={<Plus className="size-4" aria-hidden />} onClick={() => setCreateOpen(true)}>Create lease</Button>
-        }
+        actions={<Button iconLeft={<Plus className="size-4" aria-hidden />} onClick={() => setCreateOpen(true)}>Create lease</Button>}
       />
       <NotConnectedNotice subject="Leases" />
       <CreateLeaseModal open={createOpen} onClose={() => setCreateOpen(false)} onCreated={() => setSelectedId(undefined)} />
@@ -124,7 +164,7 @@ export function LeasesPage() {
       <Card padding="none">
         <div className="flex flex-col gap-3 p-4 pb-0 sm:p-5 sm:pb-0 lg:p-6 lg:pb-0">
           <CardHeader title="Your leases" className="mb-0" />
-          <div role="tablist" aria-label="Filter leases by status" className="grid grid-cols-4 gap-1.5 sm:flex sm:flex-wrap">
+          <div role="tablist" aria-label="Filter leases by status" className="grid grid-cols-3 gap-1.5 sm:flex sm:flex-wrap">
             {FILTERS.map((f) => (
               <button
                 key={f.id}
@@ -156,8 +196,8 @@ export function LeasesPage() {
               reason={source.reason}
               subject="Leases"
               icon={KeyRound}
-              readyTitle={filter === 'all' ? 'No leases yet' : `No ${filter} leases`}
-              readyDescription="Create a lease to give an agent a spending limit."
+              readyTitle={filter === 'all' ? 'No leases yet' : filter === 'archived' ? 'No archived leases' : `No ${filter} leases`}
+              readyDescription={filter === 'archived' ? 'Leases you archive will appear here. You can restore them at any time.' : 'Create a lease to give an agent a spending limit.'}
             />
           }
         />
