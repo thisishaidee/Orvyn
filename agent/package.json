@@ -1,0 +1,20 @@
+{
+  "name": "@orvynn/minimal-agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A restricted Arc agent that can request USDC payments through Orvynn AgentPay.",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "viem": "^2.57.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
