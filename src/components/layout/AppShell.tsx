@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { Menu, X, type LucideIcon } from 'lucide-react'
+import { ArrowUpRight, Github, Menu, X, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { BRAND } from '@/lib/brand'
 
@@ -145,7 +145,22 @@ export function AppShell({ nav, activeId, onNavigate, sidebarFooter, topBarActio
           <div className="mx-auto w-full max-w-[1200px] px-4 pb-8 pt-6 sm:px-6 md:px-8 md:pb-24 md:pt-8 xl:max-w-[1360px] xl:px-10">
             {topBarActions && <div className="mb-6 hidden justify-end md:flex">{actions('light')}</div>}
             {children}
-            <footer className="mt-10 border-t border-line px-1 py-6 text-support text-ink-soft sm:px-2"><p>{BRAND.name} — {BRAND.tagline}</p><p className="mt-1">Built for Arc. USDC spending limits enforced by smart contract.<a className="ml-2 underline hover:text-ink" href={BRAND.repoUrl} target="_blank" rel="noreferrer">Source</a></p></footer>
+            <footer className="relative mt-14 overflow-hidden rounded-[24px] bg-[#101D35] text-white shadow-[0_18px_48px_rgba(23,41,75,.12)]">
+              <div className="pointer-events-none absolute inset-0 opacity-20"><img src="/images/orvynn-particle-hero.svg" alt="" className="h-full w-full object-cover object-center" /></div>
+              <div className="pointer-events-none absolute -right-16 -top-24 size-64 rounded-full border border-white/10" />
+              <div className="relative flex flex-col gap-7 p-5 sm:p-7 lg:flex-row lg:items-end lg:justify-between">
+                <div className="max-w-lg">
+                  <BrandMark className="text-white" />
+                  <p className="mt-5 max-w-md text-sm leading-6 text-white/65">Spending limits for AI agents, enforced by smart contract.</p>
+                  <span className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[10px] font-medium uppercase tracking-[.14em] text-[#BFD5F0]"><span className="size-1.5 rounded-full bg-[#8FB9EB]" /> Built for Arc · USDC</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <a href={BRAND.repoUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center gap-2 rounded-full border border-white/15 px-4 text-xs font-medium text-white/85 transition hover:border-white/30 hover:bg-white/10 hover:text-white"><Github className="size-4" /> Source code <ArrowUpRight className="size-3.5" /></a>
+                  <a href="https://arc.network" target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center gap-2 rounded-full bg-white px-4 text-xs font-semibold text-brand-navy transition hover:bg-[#EAF2FC]">Explore Arc <ArrowUpRight className="size-3.5" /></a>
+                </div>
+              </div>
+              <div className="relative flex flex-col gap-1 border-t border-white/10 px-5 py-3 text-[11px] text-white/45 sm:flex-row sm:items-center sm:justify-between sm:px-7"><span>{BRAND.name} · {BRAND.tagline}</span><span>USDC spending permissions on Arc.</span></div>
+            </footer>
           </div>
         </main>
       </div>
