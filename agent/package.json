@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
-    "check": "tsx src/index.ts"
+    "test": "tsx --test test/**/*.test.ts",
+    "check": "npm run typecheck && npm test && tsx src/index.ts"
   },
   "dependencies": {
     "dotenv": "^16.4.7",
