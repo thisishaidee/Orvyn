@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
-import { Bot, UserPlus, ShieldCheck, WalletCards, Activity } from 'lucide-react'
+import { ArrowRight, Bot, ShieldCheck, WalletCards, Activity } from 'lucide-react'
 import { Badge, Card, CardHeader, DataTable, PageHeader, StatusBadge, StatCard, type Column } from '@/components/ui'
-import { NotConnectedNotice, PendingAction } from '@/components/agentpay/Notices'
+import { NotConnectedNotice } from '@/components/agentpay/Notices'
 import { SourceEmpty } from '@/components/agentpay/SourceEmpty'
 import { DelegateSpendPanel } from '@/components/agentpay/DelegateSpendPanel'
 import { leaseStatus, shortAddress, useLeases, type Lease } from '@/lib/agentpay'
@@ -59,7 +59,7 @@ export function AgentsPage() {
         eyebrow="Agents"
         title="Agents"
         description="An agent is an AI program with its own wallet address. You give it a lease so it can pay within limits you set."
-        actions={<PendingAction iconLeft={<UserPlus className="size-4" aria-hidden />}>Authorize an agent</PendingAction>}
+        actions={<a href="/?page=leases" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-brand-navy px-5 text-sm font-medium text-white shadow-card transition hover:bg-brand-blue focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue">Create a lease <ArrowRight className="size-4" aria-hidden /></a>}
       />
       <div className="grid gap-3 sm:grid-cols-3">
         <StatCard label="Agents identified" value={source.state === 'ready' ? agents.length : undefined} icon={<Bot className="size-4" />} hint="Unique delegate wallets" />
