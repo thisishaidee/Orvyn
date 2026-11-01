@@ -5,7 +5,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query'
-import { type Address, type Hex, type PublicClient } from 'viem'
+import { parseEventLogs, type Address, type Hex, type PublicClient } from 'viem'
 import { useAccount, usePublicClient, useReadContract } from 'wagmi'
 import { isSupportedChain } from '@/config'
 import { agentPayAbi } from '@/lib/agentpay-abi'
@@ -381,7 +381,20 @@ async function discoverOwnerActivity(
   try {
     logs = await client.getLogs({ address: contract, fromBlock, toBlock: 'latest' })
   } catch {
-    logs = await getLogsChunked(client, { address: contract, fromBlock })
+    // If the provider enforces a maximum range for the unfiltered request,
+    // fall back to bounded event-specific scans in parallel.
+    const names = ['LeaseCreated', 'Deposited', 'Spent', 'Revoked', 'Withdrawn', 'AllowlistUpdated'] as const
+    const batches = await Promise.all(
+      names.map((name) =>
+        getLogsChunked(client, {
+          address: contract,
+          event: eventAbi(name),
+          args: name === 'LeaseCreated' ? { owner } : undefined,
+          fromBlock,
+        }),
+      ),
+    )
+    logs = batches.flat()
   }
 
   const decoded = parseEventLogs({ abi: agentPayAbi, logs, strict: false })
