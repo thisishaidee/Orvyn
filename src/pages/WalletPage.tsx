@@ -104,7 +104,7 @@ export function WalletPage() {
                   <span className="text-ink-mute">Not available</span>
                 )}
               </InfoRow>
-              <InfoRow label="Network" hint={network.chainId !== undefined ? `Chain ID ${network.chainId}` : undefined}>
+              <InfoRow label="Network">
                 <span className="inline-flex flex-wrap items-center gap-2 md:justify-end">
                   {network.label}
                   {isConnected && <Badge tone={network.supported ? 'success' : 'warning'}>{network.supported ? 'Supported' : 'Not supported'}</Badge>}
