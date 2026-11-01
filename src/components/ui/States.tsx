@@ -141,11 +141,13 @@ const noticeIconColor: Record<NoticeTone, string> = {
 export function Notice({ tone = 'info', title, children, className }: { tone?: NoticeTone; title?: string; children?: ReactNode; className?: string }) {
   const { box, icon: Icon } = noticeStyles[tone]
   return (
-    <div role={tone === 'danger' ? 'alert' : 'status'} className={cn('flex gap-3 rounded-card border p-4', box, className)}>
-      <Icon className={cn('mt-0.5 size-5 shrink-0', noticeIconColor[tone])} aria-hidden />
-      <div className="min-w-0 text-body">
-        {title && <p className="font-semibold">{title}</p>}
-        {children && <div className={cn('text-ink-soft', title && 'mt-0.5')}>{children}</div>}
+    <div role={tone === 'danger' ? 'alert' : 'status'} className={cn('flex items-start gap-3 rounded-2xl border px-4 py-3.5 shadow-[0_2px_10px_rgba(23,41,75,.035)]', box, className)}>
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/75 ring-1 ring-black/5" aria-hidden>
+        <Icon className={cn('size-5', noticeIconColor[tone])} />
+      </span>
+      <div className="min-w-0 flex-1 pt-0.5 text-body">
+        {title && <p className="font-semibold leading-5 text-ink">{title}</p>}
+        {children && <div className={cn('text-ink-soft leading-6', title && 'mt-1')}>{children}</div>}
       </div>
     </div>
   )
