@@ -2,9 +2,9 @@ import { ArrowRight, Check, Clock3, LockKeyhole, Wallet } from 'lucide-react'
 import { BRAND } from '@/lib/brand'
 
 const steps = [
-  { number: '01', title: 'Create a lease', text: 'Choose a delegate wallet, set a spending cap and expiry, and optionally restrict who it can pay.' },
-  { number: '02', title: 'Fund it with USDC', text: 'Deposit only the amount you want available to that lease. The cap and the deposited balance are separate controls.' },
-  { number: '03', title: 'Stay in control', text: 'Track activity, revoke future spending, and withdraw the USDC that remains in the lease.' },
+  { title: 'Create a lease', text: 'Choose a delegate wallet, set a spending cap and expiry, and optionally restrict who it can pay.' },
+  { title: 'Fund it with USDC', text: 'Deposit only the amount you want available to that lease. The cap and the deposited balance are separate controls.' },
+  { title: 'Stay in control', text: 'Track activity, revoke future spending, and withdraw the USDC that remains in the lease.' },
 ]
 
 const controls = [
@@ -44,7 +44,7 @@ export function LandingPage({ onLaunch }: { onLaunch: () => void }) {
         <section className="relative isolate mx-auto grid max-w-7xl items-center gap-12 px-5 pb-20 pt-12 sm:px-8 sm:pt-20 lg:grid-cols-[1.05fr_.95fr] lg:gap-16 lg:px-10 lg:pb-28 lg:pt-24">
           <div className="pointer-events-none absolute -right-32 top-0 -z-10 size-[34rem] rounded-full bg-[radial-gradient(circle,rgba(169,196,232,.35),transparent_68%)]" />
           <div>
-            <p className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-semibold uppercase tracking-[.14em] text-brand-blue">
+            <p className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-medium uppercase tracking-[.12em] text-brand-blue">
               <span className="size-1.5 rounded-full bg-brand-blue" /> Built for Arc
             </p>
             <h1 className="mt-6 max-w-2xl text-[2.25rem] font-light leading-[1.12] tracking-[-.035em] text-brand-navy sm:text-[2.85rem] sm:leading-[1.1] lg:text-[3.65rem] lg:leading-[1.08] lg:tracking-[-.04em]">
@@ -68,7 +68,7 @@ export function LandingPage({ onLaunch }: { onLaunch: () => void }) {
               <div className="flex items-center justify-between border-b border-line pb-5">
                 <div>
                   <p className="text-xs font-medium text-ink-mute">LEASE OVERVIEW</p>
-                  <p className="mt-1 text-lg font-semibold text-brand-navy">Delegate permissions</p>
+                  <p className="mt-1 text-lg font-medium text-brand-navy">Delegate permissions</p>
                 </div>
                 <span className="rounded-full bg-success-soft px-3 py-1 text-xs font-semibold text-success">Active</span>
               </div>
@@ -81,8 +81,8 @@ export function LandingPage({ onLaunch }: { onLaunch: () => void }) {
                 <div className="mt-2 flex justify-between text-xs text-ink-mute"><span>3.80 spent</span><span>6.20 remaining</span></div>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-xl border border-line bg-canvas p-3"><Wallet className="size-4 text-brand-blue" /><p className="mt-3 text-xs text-ink-mute">Lease funding</p><p className="mt-1 text-sm font-semibold text-brand-navy">Owner funded</p></div>
-                <div className="rounded-xl border border-line bg-canvas p-3"><LockKeyhole className="size-4 text-brand-blue" /><p className="mt-3 text-xs text-ink-mute">Rule enforcement</p><p className="mt-1 text-sm font-semibold text-brand-navy">On-chain</p></div>
+                <div className="rounded-xl border border-line bg-canvas p-3"><Wallet className="size-4 text-brand-blue" /><p className="mt-3 text-xs text-ink-mute">Lease funding</p><p className="mt-1 text-sm font-medium text-brand-navy">Owner funded</p></div>
+                <div className="rounded-xl border border-line bg-canvas p-3"><LockKeyhole className="size-4 text-brand-blue" /><p className="mt-3 text-xs text-ink-mute">Rule enforcement</p><p className="mt-1 text-sm font-medium text-brand-navy">On-chain</p></div>
               </div>
               <p className="mt-4 text-[11px] leading-5 text-ink-mute">Illustrative interface preview. Values shown are examples, not live account data.</p>
             </div>
@@ -91,9 +91,9 @@ export function LandingPage({ onLaunch }: { onLaunch: () => void }) {
 
         <section id="how-it-works" className="border-y border-line bg-surface py-16 sm:py-20">
           <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
-            <div className="max-w-2xl"><p className="text-xs font-semibold uppercase tracking-[.16em] text-brand-blue">How it works</p><h2 className="mt-3 text-[2rem] font-light leading-[1.08] tracking-[-.03em] text-brand-navy sm:text-[3rem]">A clear boundary between an agent and your funds.</h2><p className="mt-4 leading-7 text-ink-soft">Instead of handing a delegate unrestricted access to a wallet, give it a specific permission with limits enforced by the contract.</p></div>
+            <div className="max-w-2xl"><p className="text-xs font-medium uppercase tracking-[.12em] text-brand-blue">How it works</p><h2 className="mt-3 text-[2rem] font-light leading-[1.08] tracking-[-.03em] text-brand-navy sm:text-[3rem]">A clear boundary between an agent and your funds.</h2><p className="mt-4 leading-7 text-ink-soft">Instead of handing a delegate unrestricted access to a wallet, give it a specific permission with limits enforced by the contract.</p></div>
             <div className="mt-12 grid gap-5 md:grid-cols-3">
-              {steps.map((step) => <article key={step.number} className="rounded-2xl border border-line bg-canvas p-6 sm:p-7"><p className="text-sm font-semibold tracking-widest text-brand-blue">{step.number}</p><h3 className="mt-4 text-base font-semibold text-brand-navy">{step.title}</h3><p className="mt-3 text-sm leading-6 text-ink-soft">{step.text}</p></article>)}
+              {steps.map((step) => <article key={step.number} className="rounded-2xl border border-line bg-canvas p-6 sm:p-7"><p className="text-sm font-semibold tracking-widest text-brand-blue">{step.number}</p><h3 className="mt-4 text-base font-medium text-brand-navy">{step.title}</h3><p className="mt-3 text-sm leading-6 text-ink-soft">{step.text}</p></article>)}
             </div>
           </div>
         </section>
