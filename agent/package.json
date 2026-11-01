@@ -8,7 +8,8 @@
     "dev": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
     "check": "tsx src/index.ts",
-    "wallet:create": "tsx src/create-wallet.ts"
+    "wallet:create": "tsx src/create-wallet.ts",
+    "payment:approve": "tsx src/approve-payment.ts"
   },
   "dependencies": {
     "dotenv": "^16.4.7",
