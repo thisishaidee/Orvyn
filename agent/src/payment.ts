@@ -44,7 +44,7 @@ export async function prepareLeasePayment(request: PaymentRequest): Promise<Prep
       address: agentPayAddress,
       abi: agentPayAbi,
       functionName: "remainingAllowance",
-      args: [request.leaseId]
+      args: [input.leaseId]
     }),
     publicClient.getBlock({ blockTag: "latest" })
   ]);
