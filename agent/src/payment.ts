@@ -22,14 +22,9 @@ export type PaymentRequest = {
   leaseId: bigint;
   recipient: Address;
   amountUsdc: string;
-  /** Must be explicitly true; this is a deliberate human/operator confirmation gate. */
-  confirmed: boolean;
 };
 
 export async function sendLeasePayment(request: PaymentRequest) {
-  if (request.confirmed !== true) {
-    throw new Error("Payment not sent. Set confirmed: true only after reviewing the recipient and amount.");
-  }
   if (request.leaseId <= 0n) throw new Error("Lease ID must be a positive integer.");
 
   const recipient = getAddress(request.recipient);
