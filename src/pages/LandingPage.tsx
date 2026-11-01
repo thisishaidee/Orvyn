@@ -28,7 +28,7 @@ export function LandingPage({ onLaunch }: { onLaunch: () => void }) {
       <header className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8 lg:px-10">
         <a href="/" className="flex items-center gap-3" aria-label={BRAND.name + ' home'}>
           <span className="flex size-10 items-center justify-center rounded-xl bg-brand-gradient text-white shadow-card">
-            <ShieldCheck className="size-5" aria-hidden />
+            <OrvynnMark className="size-7" />
           </span>
           <span className="text-lg font-semibold tracking-tight">{BRAND.name}</span>
         </a>
@@ -47,7 +47,7 @@ export function LandingPage({ onLaunch }: { onLaunch: () => void }) {
             <p className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-semibold uppercase tracking-[.14em] text-brand-blue">
               <span className="size-1.5 rounded-full bg-brand-blue" /> Built for Arc
             </p>
-            <h1 className="mt-6 max-w-2xl text-4xl font-semibold leading-[1.08] tracking-[-.045em] text-brand-navy sm:text-5xl lg:text-6xl">
+            <h1 className="mt-6 max-w-2xl text-[2.625rem] font-light leading-[1.02] tracking-[-.025em] text-brand-navy sm:text-[3.5rem] lg:text-[4.625rem] lg:tracking-[-.03em]">
               Give agents a spending limit, not your keys.
             </h1>
             <p className="mt-6 max-w-xl text-base leading-7 text-ink-soft sm:text-lg sm:leading-8">
@@ -82,7 +82,7 @@ export function LandingPage({ onLaunch }: { onLaunch: () => void }) {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-xl border border-line bg-canvas p-3"><Wallet className="size-4 text-brand-blue" /><p className="mt-3 text-xs text-ink-mute">Lease funding</p><p className="mt-1 text-sm font-semibold text-brand-navy">Owner funded</p></div>
-                <div className="rounded-xl border border-line bg-canvas p-3"><ShieldCheck className="size-4 text-brand-blue" /><p className="mt-3 text-xs text-ink-mute">Rule enforcement</p><p className="mt-1 text-sm font-semibold text-brand-navy">On-chain</p></div>
+                <div className="rounded-xl border border-line bg-canvas p-3"><LockKeyhole className="size-4 text-brand-blue" /><p className="mt-3 text-xs text-ink-mute">Rule enforcement</p><p className="mt-1 text-sm font-semibold text-brand-navy">On-chain</p></div>
               </div>
               <p className="mt-4 text-[11px] leading-5 text-ink-mute">Illustrative interface preview. Values shown are examples, not live account data.</p>
             </div>
@@ -91,7 +91,7 @@ export function LandingPage({ onLaunch }: { onLaunch: () => void }) {
 
         <section id="how-it-works" className="border-y border-line bg-surface py-20 sm:py-24">
           <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
-            <div className="max-w-2xl"><p className="text-xs font-semibold uppercase tracking-[.16em] text-brand-blue">How it works</p><h2 className="mt-3 text-3xl font-semibold tracking-tight text-brand-navy sm:text-4xl">A clear boundary between an agent and your funds.</h2><p className="mt-4 leading-7 text-ink-soft">Instead of handing a delegate unrestricted access to a wallet, give it a specific permission with limits enforced by the contract.</p></div>
+            <div className="max-w-2xl"><p className="text-xs font-semibold uppercase tracking-[.16em] text-brand-blue">How it works</p><h2 className="mt-3 text-[2rem] font-light leading-[1.08] tracking-[-.03em] text-brand-navy sm:text-[3rem]">A clear boundary between an agent and your funds.</h2><p className="mt-4 leading-7 text-ink-soft">Instead of handing a delegate unrestricted access to a wallet, give it a specific permission with limits enforced by the contract.</p></div>
             <div className="mt-12 grid gap-5 md:grid-cols-3">
               {steps.map((step) => <article key={step.number} className="rounded-2xl border border-line bg-canvas p-6 sm:p-7"><p className="text-sm font-semibold tracking-widest text-brand-blue">{step.number}</p><h3 className="mt-5 text-lg font-semibold text-brand-navy">{step.title}</h3><p className="mt-3 text-sm leading-6 text-ink-soft">{step.text}</p></article>)}
             </div>
@@ -112,7 +112,7 @@ export function LandingPage({ onLaunch }: { onLaunch: () => void }) {
 
         <section className="px-5 pb-20 sm:px-8 sm:pb-24 lg:px-10">
           <div className="mx-auto max-w-7xl overflow-hidden rounded-3xl bg-brand-navy px-6 py-12 text-white shadow-[0_24px_70px_rgba(23,41,75,.2)] sm:px-10 sm:py-16">
-            <div className="mx-auto max-w-2xl text-center"><p className="text-xs font-semibold uppercase tracking-[.16em] text-brand-pale">Take control of agent spending</p><h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">Set the rules before the first payment.</h2><p className="mt-4 leading-7 text-brand-pale">Create a lease and give your delegate only the permissions it needs.</p><button onClick={onLaunch} className="mt-8 inline-flex min-h-12 items-center gap-2 rounded-xl bg-white px-6 text-sm font-semibold text-brand-navy transition hover:bg-mist focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">Open Orvynn <ArrowRight className="size-4" /></button></div>
+            <div className="mx-auto max-w-2xl text-center"><p className="text-xs font-semibold uppercase tracking-[.16em] text-brand-pale">Take control of agent spending</p><h2 className="mt-4 text-[2rem] font-light leading-[1.08] tracking-[-.03em] sm:text-[3rem]">Set the rules before the first payment.</h2><p className="mt-4 leading-7 text-brand-pale">Create a lease and give your delegate only the permissions it needs.</p><button onClick={onLaunch} className="mt-8 inline-flex min-h-12 items-center gap-2 rounded-xl bg-white px-6 text-sm font-semibold text-brand-navy transition hover:bg-mist focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">Open Orvynn <ArrowRight className="size-4" /></button></div>
           </div>
         </section>
       </main>
