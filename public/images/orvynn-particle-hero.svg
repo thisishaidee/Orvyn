@@ -17,17 +17,8 @@
 <path d="M0 690 Q220 615 420 675 T820 690 T1200 650 T1600 630" stroke="#DCEBFF" stroke-width="1.5" stroke-dasharray="1 8" opacity=".45"/>
 <path d="M0 755 Q250 690 500 740 T1000 750 T1600 700" stroke="#DCEBFF" stroke-width="1" stroke-dasharray="1 10" opacity=".32"/>
 </g>
-<!-- larger owner silhouette made from dotted contour -->
-<g stroke="#F4F8FF" stroke-linecap="round" stroke-dasharray="1 8" fill="none">
-<path d="M595 545 Q575 470 590 390 Q600 330 635 285 Q655 245 650 205 Q645 165 675 145 Q710 125 735 155 Q760 190 738 225 Q720 250 745 282 Q780 330 790 390 Q805 465 785 545" stroke-width="7" opacity=".95"/>
-<path d="M728 290 Q790 250 840 205 Q875 170 900 140" stroke-width="8" opacity=".95"/>
-<path d="M620 340 Q575 390 555 455 M770 345 Q820 390 840 450" stroke-width="5" opacity=".55"/>
-</g>
-<!-- smaller agent silhouette -->
-<g stroke="#F4F8FF" stroke-linecap="round" stroke-dasharray="1 7" fill="none">
-<path d="M1015 555 Q1005 495 1015 435 Q1025 390 1050 360 Q1065 335 1055 310 Q1045 285 1068 270 Q1095 252 1115 275 Q1135 300 1118 325 Q1108 345 1130 370 Q1160 410 1165 465 Q1170 520 1158 555" stroke-width="6" opacity=".82"/>
-<path d="M1120 390 Q1170 360 1200 335" stroke-width="5" opacity=".6"/>
-</g>
+
+
 <!-- connection / delegated permission -->
 <path d="M900 140 Q950 185 990 255 T1068 310" stroke="#EAF3FF" stroke-width="2" stroke-dasharray="2 12" opacity=".9"/>
 <circle cx="900" cy="140" r="32" fill="url(#core)"/><circle cx="1068" cy="310" r="24" fill="url(#core)"/>
