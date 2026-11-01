@@ -63,9 +63,21 @@ Deployment requires Foundry, an Arc Mainnet RPC endpoint, and a deployer wallet 
 
 A simulation without `--broadcast` does not deploy anything. Mainnet deployment is a real transaction: do not use `--broadcast` until the contract, chain, deployer, USDC address, gas settings, and transaction details have been independently reviewed and explicitly approved. After deployment, verify the contract address and transaction on the Arc Mainnet explorer before setting `VITE_AGENTPAY_ADDRESS_MAINNET`.
 
-## Current deployment status
+## Verified Arc Mainnet deployment
 
-The repository's frontend and contract code are prepared for Arc networks, but this documentation does not assert that AgentPay has been deployed. Add a verified deployment address and transaction reference here only after a real deployment has been completed and checked.
+- AgentPay: [0xA549B60313A86288d46323e5723AAa4c0fAA6363](https://explorer.arc.io/address/0xA549B60313A86288d46323e5723AAa4c0fAA6363)
+- Deployment transaction: [0x7714b5ae3b3208e80c108a10866b52083d0304391d4d0984cea54928f8021ac7](https://explorer.arc.io/tx/0x7714b5ae3b3208e80c108a10866b52083d0304391d4d0984cea54928f8021ac7)
+- Chain ID: `5042`
+- USDC: `0x3600000000000000000000000000000000000000` (6 decimals)
+
+## Agent payment-preparation API
+
+The Cloudflare Pages app exposes:
+
+- `GET /api/agent/health` — health check.
+- `POST /api/agent/payment-requests/prepare` — validates a proposed payment against Arc Mainnet lease state and simulates the exact `spend()` call.
+
+The POST endpoint requires the `AGENT_API_TOKEN` Cloudflare Pages secret. It never signs or submits transactions; the delegate must confirm the spend in their wallet. See [agent/AI_AGENT_INTEGRATION.md](agent/AI_AGENT_INTEGRATION.md) for the tool schema and integration instructions.
 
 ## Third-party code
 
