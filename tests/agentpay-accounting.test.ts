@@ -71,6 +71,7 @@ describe('event pagination completeness', () => {
     await expect(getLogsChunked(client, {
       address: '0x0000000000000000000000000000000000000001' as Address,
       event: { type: 'event', name: 'LeaseCreated', inputs: [] } as never,
+      fromBlock: 0n,
     })).rejects.toThrow(/Incomplete event history/)
     expect(calls).toBeGreaterThan(1)
   })
@@ -88,6 +89,7 @@ describe('allowlist read failure', () => {
     await expect(getLogsChunked(client, {
       address: '0x0000000000000000000000000000000000000001' as Address,
       event: { type: 'event', name: 'AllowlistUpdated', inputs: [] } as never,
+      fromBlock: 0n,
     })).rejects.toThrow('allowlist rpc failed')
   })
 })
