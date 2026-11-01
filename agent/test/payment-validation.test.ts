@@ -46,7 +46,7 @@ test("rejects zero, negative, malformed and over-precision amounts", () => {
   for (const amountUsdc of ["0", "0.0000000", "-1", "1e-3", "1.", ".1", "1.0000001"]) {
     assert.throws(() => validatePaymentInput({
       leaseId: 1n, delegate, recipient, amountUsdc
-    }), undefined);
+    }));
   }
 });
 
