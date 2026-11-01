@@ -34,7 +34,7 @@ export function validatePaymentInput(input: {
   if (recipient.toLowerCase() === ZERO_ADDRESS) {
     throw new Error("Recipient cannot be the zero address.");
   }
-  if (!/^\\d+(\\.\\d{1,6})?$/.test(input.amountUsdc)) {
+  if (!/^\d+(\.\d{1,6})?$/.test(input.amountUsdc)) {
     throw new Error("Enter a positive USDC amount with up to six decimal places.");
   }
 
