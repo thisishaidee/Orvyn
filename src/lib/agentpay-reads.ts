@@ -41,7 +41,7 @@ export function useReadGate(): ReadGate {
       state: 'missing-address',
       reason: env
         ? `No Orvynn contract address is configured for this network. Set ${env} after a real deployment.`
-        : 'No AgentPay contract address is configured for this network.',
+        : 'No Orvynn contract address is configured for this network.',
     }
   }
   if (!client) {
