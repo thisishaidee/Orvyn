@@ -119,7 +119,7 @@ export function LandingPage({ onLaunch }: { onLaunch: () => void }) {
 
       <footer className="bg-canvas">
         <div className="mx-auto max-w-7xl px-5 pb-10 pt-12 sm:px-8 sm:pb-12 sm:pt-14 lg:px-10">
-          <div className="flex flex-col gap-6 border-b border-line/70 pb-8 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-6 pb-8 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-col gap-2">
               <a href={BRAND.repoUrl} target="_blank" rel="noreferrer" className="text-base font-normal text-brand-navy transition hover:text-brand-blue">Contact via GitHub</a>
               <p className="text-sm text-ink-soft">Questions, feedback or contributions.</p>
