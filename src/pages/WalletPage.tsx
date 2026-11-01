@@ -133,14 +133,18 @@ export function WalletPage() {
         </Notice>
       )}
 
-      <Notice tone="info" title="Connection options">
-        {wallets.detected.length > 0
-          ? `Detected in this browser: ${wallets.detected.map((w) => w.name).join(', ')}. `
-          : 'No browser wallet was detected here. '}
-        Coinbase Wallet is available too.{' '}
-        {wallets.walletConnectConfigured
-          ? 'WalletConnect is enabled for mobile wallets.'
-          : <>WalletConnect for mobile wallets is not enabled yet: it needs <code className="font-mono">{WALLETCONNECT_ENV_VAR}</code>.</>}
+      <Notice tone="info" title={isConnected ? 'Wallet connection active' : 'Connection options'}>
+        {isConnected
+          ? `Connected with ${connector?.name ?? 'your wallet'}. Browser wallet detection is separate and does not affect this active connection.`
+          : <>
+              {wallets.detected.length > 0
+                ? `Detected in this browser: ${wallets.detected.map((w) => w.name).join(', ')}. `
+                : 'No browser wallet was detected here. '}
+              Coinbase Wallet is available too.{' '}
+              {wallets.walletConnectConfigured
+                ? 'WalletConnect is enabled for mobile wallets.'
+                : <>WalletConnect for mobile wallets is not enabled yet: it needs <code className="font-mono">{WALLETCONNECT_ENV_VAR}</code>.</>}
+            </>}
       </Notice>
     </div>
   )
