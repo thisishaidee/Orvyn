@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import { Button, Card, CardHeader, ConfirmDialog, DataTable, PageHeader, ProgressBar, StatusBadge, type Column } from '@/components/ui'
 import { LeaseDetail } from '@/components/agentpay/LeaseDetail'
 import { CreateLeaseModal } from '@/components/agentpay/CreateLeaseModal'
-import { NotConnectedNotice, PendingAction } from '@/components/agentpay/Notices'
+import { NotConnectedNotice } from '@/components/agentpay/Notices'
 import { SourceEmpty } from '@/components/agentpay/SourceEmpty'
 import {
   formatDateTime,
