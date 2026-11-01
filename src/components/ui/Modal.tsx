@@ -82,8 +82,8 @@ export function Modal({ open, onClose, title, description, children, footer, dis
       labelledBy={titleId}
       describedBy={descId}
       className={cn(
-        'open:flex open:flex-col bg-surface',
-        'inset-x-0 bottom-0 top-auto m-0 h-[min(90dvh,44rem)] w-full max-w-none animate-sheet-up overscroll-none rounded-t-panel',
+        'open:flex open:flex-col touch-pan-y overflow-x-hidden bg-surface',
+        'inset-x-0 bottom-0 top-auto m-0 h-[min(90dvh,44rem)] w-full max-w-none animate-sheet-up overscroll-y-contain rounded-t-panel',
         'md:inset-0 md:m-auto md:h-fit md:max-h-[85dvh] md:w-[calc(100%-3rem)] md:animate-fade-in md:rounded-panel',
         sizes[size],
       )}
