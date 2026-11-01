@@ -8,7 +8,6 @@ const OWNER = '0x2222222222222222222222222222222222222222' as Address
 
 describe('period rollover matches AgentPay.sol', () => {
   test('reports stored spent when the current window index matches lastWindowIndex', () => {
-    // windowStart 1000, period 100, now 1050 => index 0
     expect(currentWindowIndex(1050n, 1000n, 100n)).toBe(0n)
     expect(currentPeriodSpent({
       nowSeconds: 1050n,
@@ -20,7 +19,6 @@ describe('period rollover matches AgentPay.sol', () => {
   })
 
   test('reports zero after the window rolls over', () => {
-    // now 1100 => index 1, stored index is 0
     expect(currentWindowIndex(1100n, 1000n, 100n)).toBe(1n)
     expect(currentPeriodSpent({
       nowSeconds: 1100n,
@@ -32,7 +30,6 @@ describe('period rollover matches AgentPay.sol', () => {
   })
 
   test('uses the same integer division as the contract', () => {
-    // (2500 - 1000) / 700 = 2
     expect(currentWindowIndex(2500n, 1000n, 700n)).toBe(2n)
     expect(currentPeriodSpent({
       nowSeconds: 2500n,
@@ -61,9 +58,8 @@ describe('event pagination completeness', () => {
     let calls = 0
     const client = {
       getBlockNumber: async () => 10_000_000n,
-      getLogs: async (args: { fromBlock?: bigint; toBlock?: bigint | 'latest' }) => {
+      getLogs: async () => {
         calls += 1
-        if (args.toBlock === 'latest') throw new Error('range too large')
         return []
       },
     } as unknown as PublicClient
@@ -71,8 +67,9 @@ describe('event pagination completeness', () => {
     await expect(getLogsChunked(client, {
       address: '0x0000000000000000000000000000000000000001' as Address,
       event: { type: 'event', name: 'LeaseCreated', inputs: [] } as never,
+      fromBlock: 0n,
     })).rejects.toThrow(/Incomplete event history/)
-    expect(calls).toBeGreaterThan(1)
+    expect(calls).toBe(1_000)
   })
 })
 
@@ -88,6 +85,7 @@ describe('allowlist read failure', () => {
     await expect(getLogsChunked(client, {
       address: '0x0000000000000000000000000000000000000001' as Address,
       event: { type: 'event', name: 'AllowlistUpdated', inputs: [] } as never,
+      fromBlock: 0n,
     })).rejects.toThrow('allowlist rpc failed')
   })
 })
