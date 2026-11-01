@@ -6,7 +6,8 @@
   "description": "A restricted Arc agent that can request USDC payments through Orvynn AgentPay.",
   "scripts": {
     "dev": "tsx src/index.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check": "tsx src/index.ts"
   },
   "dependencies": {
     "dotenv": "^16.4.7",
