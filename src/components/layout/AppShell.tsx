@@ -163,7 +163,7 @@ export function AppShell({ nav, activeId, onNavigate, sidebarFooter, topBarActio
                   aria-current={active ? 'page' : undefined}
                   aria-label={label}
                   className={cn(
-                    'focus-ring relative flex min-h-16 w-full flex-col items-center justify-center gap-1 px-0.5 py-2 text-[10px] font-medium leading-tight transition-colors',
+                    'relative flex min-h-16 w-full flex-col items-center justify-center gap-1 px-0.5 py-2 text-[10px] font-medium leading-tight transition-colors',
                     active ? 'text-brand-blue' : 'text-ink-mute hover:text-ink',
                   )}
                 >
