@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import { Check, X } from 'lucide-react'
+import { Check, X, Wallet, Network, SlidersHorizontal, ShieldCheck, Info } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { useAccount, useChains } from 'wagmi'
 import { Badge, Card, CardHeader, PageHeader } from '@/components/ui'
 import { InfoList, InfoRow } from '@/components/agentpay/Notices'
@@ -9,10 +10,13 @@ import { shortAddress } from '@/lib/agentpay'
 import { useNetworkInfo } from '@/lib/wallet'
 import { getAgentPayAddress } from '@/lib/agentpay-address'
 
-function Section({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
+function Section({ title, description, icon: Icon, children }: { title: string; description?: string; icon: LucideIcon; children: ReactNode }) {
   return (
-    <Card>
-      <CardHeader title={title} description={description} className="mb-2" />
+    <Card className="overflow-hidden">
+      <div className="mb-4 flex items-start gap-3">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-mist text-brand-blue"><Icon className="size-5" /></span>
+        <div className="min-w-0 flex-1"><CardHeader title={title} description={description} className="mb-0" /></div>
+      </div>
       {children}
     </Card>
   )
@@ -46,8 +50,15 @@ export function SettingsPage() {
     <div className="space-y-6 md:space-y-8">
       <PageHeader eyebrow="Settings" title="Settings" description="Your wallet, network and how the app works. Nothing here changes your funds." />
 
+      <Card tone="featured" className="relative overflow-hidden">
+        <div className="pointer-events-none absolute -right-10 -top-16 size-56 rounded-full border-[28px] border-white/5" />
+        <div className="relative flex items-center gap-3">
+          <span className="flex size-11 items-center justify-center rounded-xl bg-white/10"><ShieldCheck className="size-5" /></span>
+          <div><p className="text-overline uppercase text-brand-pale">Control centre</p><h2 className="mt-1 text-section text-white">Your account and security at a glance.</h2><p className="mt-1 text-support text-brand-pale">Review your active wallet, network and contract configuration.</p></div>
+        </div>
+      </Card>
       <div className="grid gap-4 xl:grid-cols-2">
-        <Section title="Connected wallet">
+        <Section title="Connected wallet" icon={Wallet}>
           <InfoList>
             <InfoRow label="Status">
               <Badge tone={isConnected ? 'success' : 'neutral'}>{isConnected ? 'Connected' : 'Not connected'}</Badge>
@@ -59,7 +70,7 @@ export function SettingsPage() {
           </InfoList>
         </Section>
 
-        <Section title="Selected network">
+        <Section title="Selected network" icon={Network}>
           <InfoList>
             <InfoRow label="Wallet network" hint={network.chainId !== undefined ? `Chain ID ${network.chainId}` : undefined}>
               {network.label}
@@ -73,7 +84,7 @@ export function SettingsPage() {
           </InfoList>
         </Section>
 
-        <Section title="Application preferences" description="No adjustable preferences exist yet.">
+        <Section title="Application preferences" description="Current display defaults for this workspace." icon={SlidersHorizontal}>
           <InfoList>
             <InfoRow label="Theme">Light</InfoRow>
             <InfoRow label="Currency display">USDC, 6 decimal places</InfoRow>
@@ -81,7 +92,7 @@ export function SettingsPage() {
           </InfoList>
         </Section>
 
-        <Section title="Security information">
+        <Section title="Security information" icon={ShieldCheck}>
           <ul className="divide-y divide-line">
             <Fact ok>This app never asks for your private key or recovery phrase. Your wallet signs every action.</Fact>
             <Fact ok>Spending rules are enforced by the AgentPay contract, not by this website.</Fact>
@@ -92,7 +103,7 @@ export function SettingsPage() {
         </Section>
       </div>
 
-      <Section title={`About ${BRAND.name}`}>
+      <Section title={`About ${BRAND.name}`} icon={Info}>
         <InfoList>
           <InfoRow label="Product">{BRAND.name}</InfoRow>
           <InfoRow label="Purpose">{BRAND.tagline}</InfoRow>

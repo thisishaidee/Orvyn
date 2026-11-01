@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useAccount } from 'wagmi'
-import { Archive, ArchiveRestore, KeyRound, Plus } from 'lucide-react'
+import { Archive, ArchiveRestore, KeyRound, Plus, ShieldCheck, Clock3, WalletCards } from 'lucide-react'
 import { toast } from 'sonner'
-import { Button, Card, CardHeader, ConfirmDialog, DataTable, PageHeader, ProgressBar, StatusBadge, type Column } from '@/components/ui'
+import { Button, Card, CardHeader, ConfirmDialog, DataTable, PageHeader, ProgressBar, StatusBadge, StatCard, type Column } from '@/components/ui'
 import { LeaseDetail } from '@/components/agentpay/LeaseDetail'
 import { CreateLeaseModal } from '@/components/agentpay/CreateLeaseModal'
 import { NotConnectedNotice } from '@/components/agentpay/Notices'
@@ -138,6 +138,12 @@ export function LeasesPage() {
         description="A lease is a spending agreement between you and an agent: how much it may spend, how often, until when, and to whom."
         actions={<Button iconLeft={<Plus className="size-4" aria-hidden />} onClick={() => setCreateOpen(true)}>Create lease</Button>}
       />
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard label="Total leases" value={ready ? withStatus.length : undefined} icon={<WalletCards className="size-4" />} hint="Created from this wallet" />
+        <StatCard label="Active" value={ready ? withStatus.filter((r) => r.status === 'active' && !r.archived).length : undefined} icon={<ShieldCheck className="size-4" />} hint="Currently available to agents" />
+        <StatCard label="Expired or revoked" value={ready ? withStatus.filter((r) => r.status !== 'active' && !r.archived).length : undefined} icon={<Clock3 className="size-4" />} hint="No longer spendable" />
+        <StatCard label="Archived" value={ready ? withStatus.filter((r) => r.archived).length : undefined} icon={<Archive className="size-4" />} hint="Hidden from the main list" />
+      </div>
       <NotConnectedNotice subject="Leases" />
       <CreateLeaseModal open={createOpen} onClose={() => setCreateOpen(false)} onCreated={() => setSelectedId(undefined)} />
       <ConfirmDialog
@@ -161,9 +167,9 @@ export function LeasesPage() {
         }}
       />
 
-      <Card padding="none">
-        <div className="flex flex-col gap-3 p-4 pb-0 sm:p-5 sm:pb-0 lg:p-6 lg:pb-0">
-          <CardHeader title="Your leases" className="mb-0" />
+      <Card padding="none" className="overflow-hidden">
+        <div className="flex flex-col gap-4 border-b border-line bg-gradient-to-r from-brand-mist/70 to-transparent p-4 sm:p-5 lg:p-6">
+          <CardHeader title="Your leases" description="Monitor spending limits, expiry dates and agent permissions." className="mb-0" />
           <div role="tablist" aria-label="Filter leases by status" className="grid grid-cols-3 gap-1.5 sm:flex sm:flex-wrap">
             {FILTERS.map((f) => (
               <button

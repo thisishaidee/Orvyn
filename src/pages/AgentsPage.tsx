@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
-import { Bot, UserPlus } from 'lucide-react'
-import { Badge, Card, CardHeader, DataTable, PageHeader, StatusBadge, type Column } from '@/components/ui'
+import { Bot, UserPlus, ShieldCheck, WalletCards, Activity } from 'lucide-react'
+import { Badge, Card, CardHeader, DataTable, PageHeader, StatusBadge, StatCard, type Column } from '@/components/ui'
 import { NotConnectedNotice, PendingAction } from '@/components/agentpay/Notices'
 import { SourceEmpty } from '@/components/agentpay/SourceEmpty'
 import { DelegateSpendPanel } from '@/components/agentpay/DelegateSpendPanel'
@@ -61,12 +61,24 @@ export function AgentsPage() {
         description="An agent is an AI program with its own wallet address. You give it a lease so it can pay within limits you set."
         actions={<PendingAction iconLeft={<UserPlus className="size-4" aria-hidden />}>Authorize an agent</PendingAction>}
       />
+      <div className="grid gap-3 sm:grid-cols-3">
+        <StatCard label="Agents identified" value={source.state === 'ready' ? agents.length : undefined} icon={<Bot className="size-4" />} hint="Unique delegate wallets" />
+        <StatCard label="Active agents" value={source.state === 'ready' ? agents.filter((a) => a.canSpend).length : undefined} icon={<Activity className="size-4" />} hint="With an active lease" />
+        <StatCard label="Leases assigned" value={source.state === 'ready' ? source.items.length : undefined} icon={<WalletCards className="size-4" />} hint="Across all delegate wallets" />
+      </div>
       <NotConnectedNotice subject="Agents" />
 
       <DelegateSpendPanel />
 
+      <Card tone="featured" className="relative overflow-hidden">
+        <div className="pointer-events-none absolute -right-8 -top-12 size-48 rounded-full border-[24px] border-white/5" />
+        <div className="relative flex items-start gap-3">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white"><ShieldCheck className="size-5" /></span>
+          <div><p className="text-overline uppercase text-brand-pale">Delegated access</p><h2 className="mt-1 text-section text-white">An agent gets permission, not ownership.</h2><p className="mt-1 max-w-2xl text-support text-brand-pale">Every agent is identified by its wallet address. Its ability to spend comes from the leases you create and the rules enforced by the contract.</p></div>
+        </div>
+      </Card>
       <Card>
-        <CardHeader title="How agents work in AgentPay" />
+        <CardHeader title="How agents work in AgentPay" description="Three steps from authorization to controlled spending." />
         <ol className="space-y-3">
           {STEPS.map((step, i) => (
             <li key={step} className="flex gap-3 text-body">
@@ -82,9 +94,9 @@ export function AgentsPage() {
         </p>
       </Card>
 
-      <Card padding="none">
-        <div className="p-4 pb-0 sm:p-5 sm:pb-0 lg:p-6 lg:pb-0">
-          <CardHeader title="Your agents" className="mb-0" />
+      <Card padding="none" className="overflow-hidden">
+        <div className="border-b border-line bg-gradient-to-r from-brand-mist/70 to-transparent p-4 sm:p-5 lg:p-6">
+          <CardHeader title="Your agents" description="Delegate wallets currently associated with your leases." className="mb-0" />
         </div>
         <DataTable
           caption="Agents"

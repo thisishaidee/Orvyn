@@ -1,4 +1,4 @@
-import { Copy, ExternalLink, Wallet } from 'lucide-react'
+import { Copy, ExternalLink, Wallet, ShieldCheck, Network, Coins } from 'lucide-react'
 import { arc, arcTestnet } from 'viem/chains'
 import { useAccount, useDisconnect } from 'wagmi'
 import { toast } from 'sonner'
@@ -62,6 +62,11 @@ export function WalletPage() {
         }
       />
 
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Card tone="soft" className="flex items-center gap-3"><span className="flex size-10 items-center justify-center rounded-xl bg-surface text-brand-blue"><ShieldCheck className="size-5" /></span><div><p className="text-label text-ink">Self-custody</p><p className="text-support text-ink-soft">You control the keys</p></div></Card>
+        <Card tone="soft" className="flex items-center gap-3"><span className="flex size-10 items-center justify-center rounded-xl bg-surface text-brand-blue"><Network className="size-5" /></span><div><p className="text-label text-ink">Arc network</p><p className="text-support text-ink-soft">Mainnet and testnet</p></div></Card>
+        <Card tone="soft" className="flex items-center gap-3"><span className="flex size-10 items-center justify-center rounded-xl bg-surface text-brand-blue"><Coins className="size-5" /></span><div><p className="text-label text-ink">USDC</p><p className="text-support text-ink-soft">Six-decimal precision</p></div></Card>
+      </div>
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <Card>

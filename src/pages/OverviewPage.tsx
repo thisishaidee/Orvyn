@@ -1,11 +1,13 @@
 import { Ban, Gauge, ListChecks, type LucideIcon } from 'lucide-react'
 import { useAccount } from 'wagmi'
-import { Badge, Button, Card, CardHeader, PageHeader } from '@/components/ui'
+import { Badge, Button, Card, CardHeader, PageHeader, StatCard } from '@/components/ui'
 import { InfoList, InfoRow } from '@/components/agentpay/Notices'
 import { BRAND } from '@/lib/brand'
 import { useNetworkInfo } from '@/lib/wallet'
 import { getAgentPayAddress } from '@/lib/agentpay-address'
 import type { PageId } from '@/lib/route'
+import { useLeases, leaseStatus } from '@/lib/agentpay'
+import { useActivity } from '@/lib/agentpay'
 
 const FEATURES: { icon: LucideIcon; title: string; text: string }[] = [
   { icon: Gauge, title: 'Per-period cap', text: 'An agent can spend up to its limit each period, and the limit resets on its own.' },
@@ -16,6 +18,9 @@ const FEATURES: { icon: LucideIcon; title: string; text: string }[] = [
 /** Product introduction plus a setup checklist driven by real wallet state. No balances or leases are shown. */
 export function OverviewPage({ onNavigate }: { onNavigate: (page: PageId) => void }) {
   const { isConnected } = useAccount()
+  const leases = useLeases()
+  const activity = useActivity()
+  const activeLeaseCount = leases.state === 'ready' ? leases.items.filter((lease) => leaseStatus(lease) === 'active').length : undefined
   const network = useNetworkInfo()
   const contractAddress = getAgentPayAddress(network.chainId)
   const contractConfigured = Boolean(contractAddress)
@@ -32,6 +37,12 @@ export function OverviewPage({ onNavigate }: { onNavigate: (page: PageId) => voi
         </p>
       </Card>
 
+      <div className="grid gap-3 sm:grid-cols-3">
+        <StatCard label="Leases" value={leases.state === 'ready' ? leases.items.length : undefined} hint="Permissions created from this wallet" />
+        <StatCard label="Active leases" value={activeLeaseCount} hint="Currently within their rules" />
+        <StatCard label="Activity events" value={activity.state === 'ready' ? activity.items.length : undefined} hint="Events read from the contract" />
+      </div>
+
       <ul className="grid gap-4 md:grid-cols-3">
         {FEATURES.map(({ icon: Icon, title, text }) => (
           <li key={title}>
@@ -46,7 +57,12 @@ export function OverviewPage({ onNavigate }: { onNavigate: (page: PageId) => voi
         ))}
       </ul>
 
-      <Card>
+      <Card className="overflow-hidden">
+        <div className="mb-4 rounded-xl bg-brand-mist/70 p-4 sm:p-5">
+          <p className="text-overline uppercase text-brand-blue">Workspace readiness</p>
+          <h2 className="mt-1 text-section text-brand-navy">Your AgentPay control centre</h2>
+          <p className="mt-1 text-support text-ink-soft">A live checklist of the wallet and contract connection required before managing agent spending.</p>
+        </div>
         <CardHeader title="Setup status" description="What is ready and what is not, based on your wallet right now." />
         <InfoList>
           <InfoRow label="Wallet">
