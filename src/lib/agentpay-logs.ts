@@ -12,7 +12,7 @@ const MAX_CHUNKS = 10_000
 
 export type LogQuery = {
   address: Address
-  event: (typeof agentPayAbi)[number]
+  event?: (typeof agentPayAbi)[number]
   args?: Record<string, unknown>
   fromBlock: bigint
 }
