@@ -109,14 +109,23 @@ export function AppShell({ nav, activeId, onNavigate, sidebarFooter, topBarActio
           </div>
         </main>
       </div>
-      <nav aria-label="Primary navigation" className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 shadow-[0_-8px_24px_rgba(23,41,75,0.08)] backdrop-blur-md pb-[env(safe-area-inset-bottom)] md:hidden">
-        <ul className="mx-auto grid max-w-xl grid-cols-6">{nav.map(({ id, label, icon: Icon }) => {
-          const active = id === activeId
-          return <li key={id} className="min-w-0"><button type="button" onClick={() => onNavigate(id)} aria-current={active ? 'page' : undefined} aria-label={label}
-            className={cn('relative flex min-h-[4.25rem] w-full flex-col items-center justify-center gap-1 px-0.5 py-2 text-[9px] font-medium leading-tight transition-colors sm:text-[10px]', active ? 'text-brand-blue' : 'text-ink-mute hover:text-ink')}>
-            <Icon className={cn('size-[1.125rem] shrink-0 sm:size-5', active && 'stroke-[2.4]')} aria-hidden /><span className="max-w-full whitespace-nowrap">{label}</span>{active && <span className="absolute top-0 h-0.5 w-7 rounded-full bg-brand-blue" aria-hidden />}
-          </button></li>
-        })}</ul>
+      <nav aria-label="Primary navigation" className="fixed inset-x-0 bottom-0 z-40 border-t border-[#DCE6F2] bg-white/95 shadow-[0_-10px_30px_rgba(23,41,75,0.09)] backdrop-blur-xl pb-[env(safe-area-inset-bottom)] md:hidden">
+        <ul className="mx-auto grid max-w-xl grid-cols-6 px-1">
+          {nav.map(({ id, label, icon: Icon }) => {
+            const active = id === activeId
+            return (
+              <li key={id} className="min-w-0">
+                <button type="button" onClick={() => onNavigate(id)} aria-current={active ? 'page' : undefined} aria-label={label}
+                  className={cn('relative flex min-h-[4.5rem] w-full flex-col items-center justify-center gap-1.5 px-0.5 py-2 text-[9px] font-semibold leading-none transition-colors active:scale-[.96] sm:text-[10px]', active ? 'text-brand-navy' : 'text-ink-mute hover:text-brand-navy')}>
+                  {active && <span className="absolute inset-x-2 top-1.5 h-8 rounded-xl bg-[#EAF2FC]" aria-hidden />}
+                  <Icon className={cn('relative z-10 size-[1.2rem] shrink-0 transition-transform sm:size-5', active && 'scale-105 stroke-[2.4] text-brand-blue')} aria-hidden />
+                  <span className="relative z-10 max-w-full truncate">{label}</span>
+                  {active && <span className="absolute bottom-1 h-0.5 w-5 rounded-full bg-brand-blue" aria-hidden />}
+                </button>
+              </li>
+            )
+          })}
+        </ul>
       </nav>
     </div>
   )
