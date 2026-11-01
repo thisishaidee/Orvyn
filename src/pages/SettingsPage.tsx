@@ -95,10 +95,10 @@ export function SettingsPage() {
         <Section title="Security information" icon={ShieldCheck}>
           <ul className="divide-y divide-line">
             <Fact ok>This app never asks for your private key or recovery phrase. Your wallet signs every action.</Fact>
-            <Fact ok>Spending rules are enforced by the AgentPay contract, not by this website.</Fact>
+            <Fact ok>Spending rules are enforced by the Orvynn contract, not by this website.</Fact>
             <Fact ok>The contract has no administrator, pause switch or upgrade path. Each lease is controlled by the wallet that created it.</Fact>
             <Fact ok={false}>An independent security audit of the contract has not been completed.</Fact>
-            <Fact ok={contractConfigured}> {contractConfigured ? 'A contract address is configured for the selected Arc network. Contract reads and wallet-signed actions are available when connected.' : 'No AgentPay address is configured for the selected Arc network; contract reads and transactions remain unavailable.'}</Fact>
+            <Fact ok={contractConfigured}> {contractConfigured ? 'A contract address is configured for the selected Arc network. Contract reads and wallet-signed actions are available when connected.' : 'No Orvynn contract address is configured for the selected Arc network; contract reads and transactions remain unavailable.'}</Fact>
           </ul>
         </Section>
       </div>
@@ -107,7 +107,7 @@ export function SettingsPage() {
         <InfoList>
           <InfoRow label="Product">{BRAND.name}</InfoRow>
           <InfoRow label="Purpose">{BRAND.tagline}</InfoRow>
-          <InfoRow label="Stage">Prototype. The product name is temporary.</InfoRow>
+          <InfoRow label="Stage">Prototype.</InfoRow>
           <InfoRow label="Contract">{contractAddress ? <span className="num font-mono text-support" title={contractAddress}>{shortAddress(contractAddress)}</span> : <>Not configured</>}</InfoRow>
           <InfoRow label="Wallet connections">
             Browser wallets, Coinbase Wallet{walletConnectEnabled ? ', WalletConnect' : ' (WalletConnect not configured)'}
@@ -115,11 +115,6 @@ export function SettingsPage() {
           <InfoRow label="Source code">
             <a href={BRAND.repoUrl} target="_blank" rel="noopener noreferrer" className="font-medium text-brand-blue underline-offset-2 hover:underline">
               GitHub repository
-            </a>
-          </InfoRow>
-          <InfoRow label="Built with">
-            <a href="https://studio.arc.io" target="_blank" rel="noopener noreferrer" className="font-medium text-brand-blue underline-offset-2 hover:underline">
-              Arc Studio
             </a>
           </InfoRow>
         </InfoList>
