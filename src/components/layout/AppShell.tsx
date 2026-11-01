@@ -113,7 +113,7 @@ export function AppShell({ nav, activeId, onNavigate, sidebarFooter, topBarActio
             aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
             aria-expanded={mobileMenuOpen}
             aria-controls="mobile-navigation-drawer"
-            className="focus-ring-dark inline-flex size-10 items-center justify-center rounded-control text-white transition-colors hover:bg-white/10"
+            className="focus-ring-dark inline-flex size-11 items-center justify-center rounded-control text-white transition-colors hover:bg-white/10"
           >
             {mobileMenuOpen ? <X className="size-6" aria-hidden /> : <Menu className="size-6" aria-hidden />}
           </button>
