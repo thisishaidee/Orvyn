@@ -138,11 +138,15 @@ export function LeaseDetail({ lease }: { lease?: Lease }) {
     <div className="space-y-4">
       <Card>
         <CardHeader title={lease ? `Lease ${lease.id}` : 'No lease selected'} description={lease ? <>Agent <span className="num font-mono">{shortAddress(lease.delegate)}</span></> : 'Select a lease from the list to see its details.'} action={status ? <StatusBadge status={status} /> : undefined} />
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div><p className="text-label text-ink-soft">Spent this period</p><p className="num mt-1 text-figure-sm">{lease ? `${formatUsdc(lease.spentThisPeriod)} USDC` : <Dash />}</p></div>
-          <div><p className="text-label text-ink-soft">Remaining allowance</p><p className="num mt-1 text-figure-sm">{remaining !== undefined ? `${formatUsdc(remaining)} USDC` : <Dash />}</p></div>
-          <div><p className="text-label text-ink-soft">Funds in lease</p><p className="num mt-1 text-figure-sm">{lease ? `${formatUsdc(lease.balance)} USDC` : <Dash />}</p></div>
-        </div>
+        {lease ? (
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div><p className="text-label text-ink-soft">Spent this period</p><p className="num mt-1 text-figure-sm">{formatUsdc(lease.spentThisPeriod)} USDC</p></div>
+            <div><p className="text-label text-ink-soft">Remaining allowance</p><p className="num mt-1 text-figure-sm">{remaining !== undefined ? `${formatUsdc(remaining)} USDC` : 'Unavailable'}</p></div>
+            <div><p className="text-label text-ink-soft">Funds in lease</p><p className="num mt-1 text-figure-sm">{formatUsdc(lease.balance)} USDC</p></div>
+          </div>
+        ) : (
+          <p className="text-support text-ink-soft">Select a lease from the list to view its spending and balance information.</p>
+        )}
         {lease && <ProgressBar className="mt-5" label="Period spending" valueLabel={`${formatUsdc(lease.spentThisPeriod)} of ${formatUsdc(lease.cap)} USDC`} value={Number(lease.spentThisPeriod)} max={Number(lease.cap)} tone="auto" />}
       </Card>
       <PermissionsSection lease={lease} />
