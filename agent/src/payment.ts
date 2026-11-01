@@ -73,7 +73,6 @@ export async function prepareLeasePayment(request: PaymentRequest): Promise<Prep
       recipientAllowed
     },
     suppliedDelegate: input.delegate,
-    recipient: input.recipient,
     amount: input.amount,
     nowSeconds: latestBlock.timestamp
   });
