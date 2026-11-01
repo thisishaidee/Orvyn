@@ -5,7 +5,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query'
-import { type Address, type Hex, type PublicClient } from 'viem'
+import { parseEventLogs, type Address, type Hex, type PublicClient } from 'viem'
 import { useAccount, usePublicClient, useReadContract } from 'wagmi'
 import { isSupportedChain } from '@/config'
 import { agentPayAbi } from '@/lib/agentpay-abi'
@@ -266,42 +266,17 @@ async function discoverActivity(
 
   if (leaseIds.length === 0) return []
 
-  // Every event exposes leaseId as an indexed field. Filter at the RPC instead
-  // of downloading every event emitted by the contract and discarding most of
-  // them in the browser. Viem encodes an array as an OR filter over topic values.
-  // Keep scans sequential to avoid bursts against Arc's public RPC.
-  const leaseIdFilter = { leaseId: leaseIds }
-  const created = await getLogsChunked(client, {
-    address: contract, event: eventAbi('LeaseCreated') as never,
-    args: { owner, ...leaseIdFilter }, fromBlock,
-  })
-  const deposited = await getLogsChunked(client, {
-    address: contract, event: eventAbi('Deposited') as never,
-    args: { owner, ...leaseIdFilter }, fromBlock,
-  })
-  const withdrawn = await getLogsChunked(client, {
-    address: contract, event: eventAbi('Withdrawn') as never,
-    args: { owner, ...leaseIdFilter }, fromBlock,
-  })
-  const spent = await getLogsChunked(client, {
-    address: contract, event: eventAbi('Spent') as never,
-    args: leaseIdFilter, fromBlock,
-  })
-  const revoked = await getLogsChunked(client, {
-    address: contract, event: eventAbi('Revoked') as never,
-    args: leaseIdFilter, fromBlock,
-  })
-  const allowlist = await getLogsChunked(client, {
-    address: contract, event: eventAbi('AllowlistUpdated') as never,
-    args: leaseIdFilter, fromBlock,
-  })
-
+  // Read the contract's event stream once, then decode and filter locally.
+  // Six separate historical eth_getLogs scans were serialised here, causing
+  // Activity to wait on up to six complete passes over the same block range.
+  // A single address-scoped scan returns all AgentPay events in each block chunk.
+  const rawLogs = await getLogsChunked(client, { address: contract, fromBlock })
+  const decoded = parseEventLogs({ abi: agentPayAbi, logs: rawLogs, strict: false })
   const owned = new Set(leaseIds.map((id) => id.toString()))
-  const relevant = [...created, ...deposited, ...withdrawn, ...spent, ...revoked, ...allowlist].filter((log) => {
-    const leaseId = (log as { args?: { leaseId?: bigint } }).args?.leaseId
+  const relevant = decoded.filter((log) => {
+    const leaseId = (log.args as { leaseId?: bigint } | undefined)?.leaseId
     return leaseId !== undefined && owned.has(leaseId.toString())
   })
-
   const times = await blockTimestamps(client, relevant.map((log) => log.blockNumber).filter((n): n is bigint => n !== null))
 
   const items: ActivityItem[] = relevant.map((entry) => {
