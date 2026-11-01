@@ -21,9 +21,32 @@ function json(body: unknown, status = 200): Response {
   }});
 }
 async function readBody(request: Request): Promise<unknown> {
-  const raw = await request.text();
-  if (new TextEncoder().encode(raw).byteLength > MAX_BODY_BYTES) throw new Error("Request body exceeds the 16 KB limit.");
-  try { return JSON.parse(raw); } catch { throw new Error("Request body must be valid JSON."); }
+  if (!request.body) throw new Error("Request body is required.");
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      totalBytes += value.byteLength;
+      if (totalBytes > MAX_BODY_BYTES) {
+        await reader.cancel();
+        throw new Error("Request body exceeds the 16 KB limit.");
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  const bytes = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  try { return JSON.parse(new TextDecoder().decode(bytes)); }
+  catch { throw new Error("Request body must be valid JSON."); }
 }
 function parseBody(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Provide a JSON object with leaseId, delegate, recipient and amountUsdc.");
