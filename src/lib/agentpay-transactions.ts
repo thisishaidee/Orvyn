@@ -9,12 +9,16 @@ import { useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import {
   erc20Abi,
+  formatUnits,
   type Address,
   type Hash,
 } from 'viem'
 import { useAccount, usePublicClient, useWalletClient } from 'wagmi'
 import { ARC_USDC_ADDRESS } from '@/lib/wallet'
 import { useReadGate } from '@/lib/agentpay-reads'
+import { agentPayAbi as agentPayReadAbi } from '@/lib/agentpay-abi'
+import { validatePaymentInput } from '../../agent/src/payment-validation'
+import { assertLeasePaymentAllowed } from '../../agent/src/lease-payment-guards'
 import { agentPayWriteAbi } from '@/lib/agentpay-write-abi'
 
 export type TransactionResult = {
@@ -180,18 +184,79 @@ export function useAgentPayTransactions() {
   }, [assertReady, walletClient, connectedAddress, waitForSuccess])
 
   const spend = useCallback(async (leaseId: bigint, recipient: Address, amount: bigint): Promise<TransactionResult> => {
-    if (leaseId < 0n || amount <= 0n) throw new Error('Lease ID and spend amount are invalid.')
-    const { contract, account } = assertReady()
-    if (!walletClient) throw new Error('The wallet client is unavailable.')
-    const hash = await walletClient.writeContract({
+    const { contract, account, chainId } = assertReady()
+    if (!walletClient || !publicClient) throw new Error('The wallet and Arc network clients are unavailable.')
+    if (walletClient.account?.address.toLowerCase() !== account.toLowerCase()) {
+      throw new Error('The active signer does not match the connected delegate wallet.')
+    }
+    if (chainId !== 5042) throw new Error('Agent payment requests are currently supported on Arc Mainnet only.')
+    const input = validatePaymentInput({
+      leaseId,
+      delegate: account,
+      recipient,
+      amountUsdc: formatUnits(amount, 6),
+    })
+    recipient = input.recipient
+    amount = input.amount
+
+    // Prepare against live contract state before opening the wallet confirmation.
+    const [lease, allowance, latestBlock] = await Promise.all([
+      publicClient.readContract({
+        address: contract,
+        abi: agentPayReadAbi,
+        functionName: 'leases',
+        args: [leaseId],
+      }),
+      publicClient.readContract({
+        address: contract,
+        abi: agentPayReadAbi,
+        functionName: 'remainingAllowance',
+        args: [leaseId],
+      }),
+      publicClient.getBlock({ blockTag: 'latest' }),
+    ])
+    const [owner, registeredDelegate, , , expiry, , , , balance, allowlistEnabled, revoked] = lease
+
+    const recipientAllowed = allowlistEnabled
+      ? await publicClient.readContract({
+          address: contract,
+          abi: agentPayReadAbi,
+          functionName: 'allowedRecipients',
+          args: [leaseId, recipient],
+        })
+      : false
+
+    assertLeasePaymentAllowed({
+      lease: {
+        owner,
+        delegate: registeredDelegate,
+        expiry,
+        revoked,
+        balance,
+        remainingAllowance: allowance,
+        allowlistEnabled,
+        recipientAllowed,
+      },
+      suppliedDelegate: account,
+      amount,
+      nowSeconds: latestBlock.timestamp,
+    })
+
+    // Simulate the exact spend call. This is read-only; walletClient still
+    // requires the delegate to approve the actual transaction.
+    const simulation = await publicClient.simulateContract({
+      account,
       address: contract,
       abi: agentPayWriteAbi,
       functionName: 'spend',
       args: [leaseId, recipient, amount],
+    })
+    const hash = await walletClient.writeContract({
+      ...simulation.request,
       account,
     })
     return waitForSuccess(hash)
-  }, [assertReady, walletClient, connectedAddress, waitForSuccess])
+  }, [assertReady, walletClient, publicClient, waitForSuccess])
 
   return {
     state,
