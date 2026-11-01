@@ -9,7 +9,7 @@ const steps = [
 
 const features = [
   { eyebrow: 'PERMISSION LAYER', title: 'Give every agent a boundary.', text: 'Create separate leases with defined spending limits and expiry dates.', action: 'Explore leases', href: '/?page=leases', icon: ShieldCheck, art: 'blue' },
-  { eyebrow: 'PAYMENT CONTROL', title: 'Decide where funds can go.', text: 'Optionally restrict a delegate to wallet addresses you approve.', action: 'Recipient rules', href: '/?page=leases#lease-detail-heading', icon: Check, art: 'teal' },
+  { eyebrow: 'PAYMENT CONTROL', title: 'Decide where funds can go.', text: 'Optionally restrict a delegate to wallet addresses you approve.', action: 'Recipient rules', href: '/?page=leases', icon: Check, art: 'teal' },
   { eyebrow: 'OWNER OVERSIGHT', title: 'Keep control after funding.', text: 'Review activity, stop future spending, and withdraw remaining funds.', action: 'View activity', href: '/?page=activity', icon: Activity, art: 'violet' },
 ]
 
