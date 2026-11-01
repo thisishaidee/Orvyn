@@ -6,8 +6,6 @@ import { assertLeasePaymentAllowed, type LeasePaymentState } from "../src/lease-
 const owner = "0x2222222222222222222222222222222222222222" as Address;
 const delegate = "0x359db9b8af6e50b070cd73f4af91bbdf84ba81af" as Address;
 const otherDelegate = "0x1111111111111111111111111111111111111111" as Address;
-const recipient = "0xCB2A51B4D34cC6f5dd574F7b5bFA8260E4201C55" as Address;
-const otherRecipient = "0x3333333333333333333333333333333333333333" as Address;
 
 const validLease = (): LeasePaymentState => ({
   owner,
@@ -22,13 +20,11 @@ const validLease = (): LeasePaymentState => ({
 
 const check = (lease: LeasePaymentState, overrides: Partial<{
   suppliedDelegate: Address;
-  recipient: Address;
   amount: bigint;
   nowSeconds: bigint;
 }> = {}) => assertLeasePaymentAllowed({
   lease,
   suppliedDelegate: overrides.suppliedDelegate ?? delegate,
-  recipient: overrides.recipient ?? recipient,
   amount: overrides.amount ?? 100_000n,
   nowSeconds: overrides.nowSeconds ?? 1_900_000_000n,
 });
@@ -66,14 +62,14 @@ test("rejects payment greater than remaining allowance", () => {
 test("rejects a recipient outside an enabled allowlist", () => {
   const lease = validLease();
   lease.recipientAllowed = false;
-  assert.throws(() => check(lease, { recipient: otherRecipient }), /allowlist/);
+  assert.throws(() => check(lease), /allowlist/);
 });
 
 test("does not require recipient approval when allowlisting is disabled", () => {
   const lease = validLease();
   lease.allowlistEnabled = false;
   lease.recipientAllowed = false;
-  assert.doesNotThrow(() => check(lease, { recipient: otherRecipient }));
+  assert.doesNotThrow(() => check(lease));
 });
 
 test("rejects a nonexistent lease", () => {
