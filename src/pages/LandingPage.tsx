@@ -8,9 +8,9 @@ const steps = [
 ]
 
 const features = [
-  { eyebrow: 'PERMISSION LAYER', title: 'Give every agent a boundary.', text: 'Create separate leases with defined spending limits and expiry dates.', action: 'Explore leases', icon: ShieldCheck, art: 'blue' },
-  { eyebrow: 'PAYMENT CONTROL', title: 'Decide where funds can go.', text: 'Optionally restrict a delegate to wallet addresses you approve.', action: 'Recipient rules', icon: Check, art: 'teal' },
-  { eyebrow: 'OWNER OVERSIGHT', title: 'Keep control after funding.', text: 'Review activity, stop future spending, and withdraw remaining funds.', action: 'View activity', icon: Activity, art: 'violet' },
+  { eyebrow: 'PERMISSION LAYER', title: 'Give every agent a boundary.', text: 'Create separate leases with defined spending limits and expiry dates.', action: 'Explore leases', href: '/?page=leases', icon: ShieldCheck, art: 'blue' },
+  { eyebrow: 'PAYMENT CONTROL', title: 'Decide where funds can go.', text: 'Optionally restrict a delegate to wallet addresses you approve.', action: 'Recipient rules', href: '/?page=leases#lease-detail-heading', icon: Check, art: 'teal' },
+  { eyebrow: 'OWNER OVERSIGHT', title: 'Keep control after funding.', text: 'Review activity, stop future spending, and withdraw remaining funds.', action: 'View activity', href: '/?page=activity', icon: Activity, art: 'violet' },
 ]
 
 function OrvynnMark({ className }: { className?: string }) {
@@ -86,13 +86,13 @@ export function LandingPage({ onLaunch }: { onLaunch: () => void }) {
             <p className="max-w-sm text-sm leading-6 text-ink-soft">Give agents room to operate without giving them unrestricted access to your funds.</p>
           </div>
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {features.map(({ eyebrow, title, text, action, icon: Icon, art }) => <article key={title} className="group overflow-hidden rounded-[24px] border border-[#E9E8E4] bg-white shadow-[0_14px_38px_rgba(27,38,55,.055)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_48px_rgba(27,38,55,.09)]">
+            {features.map(({ eyebrow, title, text, action, href, icon: Icon, art }) => <article key={title} className="group overflow-hidden rounded-[24px] border border-[#E9E8E4] bg-white shadow-[0_14px_38px_rgba(27,38,55,.055)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_48px_rgba(27,38,55,.09)]">
               <FeatureArt tone={art} />
               <div className="relative -mt-3 bg-gradient-to-b from-white/0 via-white/95 to-white px-6 pb-7 pt-5 sm:px-7">
                 <p className="text-[10px] font-medium uppercase tracking-[.15em] text-brand-blue">{eyebrow}</p>
                 <h3 className="mt-3 text-xl font-medium leading-snug tracking-[-.025em] text-brand-navy">{title}</h3>
                 <p className="mt-2 min-h-12 text-sm leading-6 text-ink-soft">{text}</p>
-                <span className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-full border border-line bg-white px-4 text-xs font-medium text-brand-navy"><Icon className="size-3.5 text-brand-blue" />{action}</span>
+                <a href={href} aria-label={`${action}: ${title}`} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full border border-line bg-white px-4 text-xs font-medium text-brand-navy transition hover:border-brand-pale hover:bg-brand-mist focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"><Icon className="size-3.5 text-brand-blue" />{action}<ArrowRight className="size-3.5" aria-hidden /></a>
               </div>
             </article>)}
           </div>
