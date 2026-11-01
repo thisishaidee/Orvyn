@@ -1,14 +1,23 @@
 # Orvynn Minimal Agent
 
-A standalone TypeScript package inside the Orvynn repository. It is being built as the restricted delegate agent for Arc Mainnet.
+A restricted, read-only payment-request service for Orvynn AgentPay on Arc Mainnet.
 
-## Current stage
+## Current architecture
 
-This milestone is read-only. It verifies Arc Mainnet connectivity (chain ID 5042), contract code at the deployed AgentPay address, and the Arc USDC contract with 6 decimals. It does not create a wallet, load a private key, or send transactions.
+The agent does **not** hold a wallet private key and cannot sign or submit transactions.
+
+1. An agent or user proposes a payment: lease ID, delegate wallet, recipient and amount.
+2. The agent reads the live AgentPay lease from Arc.
+3. It checks delegate identity, lease existence, revocation, expiry, recipient allowlist, deposited balance and remaining allowance.
+4. It simulates the exact `spend()` call. Simulation is read-only.
+5. It returns a structured payment intent.
+6. The connected delegate wallet reviews and signs the transaction in Orvynn. The smart contract enforces the rules again on-chain.
+
+This is the phone-first, non-custodial design. The agent can prepare a request, but it cannot move funds. A future AI model can call this narrow preparation capability; the wallet confirmation remains a separate approval boundary.
 
 ## Configuration
 
-Copy `.env.example` to `.env`. Keep real secrets in the local `.env`; the repository ignores it. The public Arc settings are already provided as defaults.
+Copy `.env.example` to `.env` if you need to override the public Arc RPC or contract addresses. No private key or wallet secret is required.
 
 ## Run
 
@@ -18,32 +27,15 @@ npm run typecheck
 npm run dev
 ```
 
-## Security design
+## Security boundaries
 
-- The agent will receive only a narrow payment capability calling AgentPay `spend(leaseId, recipient, amount)`.
-- It must not receive general-purpose token transfer tools.
-- Owner actions (`createLease`, `revoke`, `withdraw`, and lease funding) remain outside the agent.
-- AgentPay enforces delegate identity, lease status, expiry, recipient allowlist, spending cap, and available balance.
-- Never commit or share an agent private key. Never put secrets in source code, chat messages, screenshots, or GitHub issues.
+- No private key generation, storage, import or signing in this package.
+- No general-purpose USDC transfer capability.
+- No owner functions such as `createLease`, `deposit`, `setAllowlist`, `revoke` or `withdraw`.
+- Only the connected delegate wallet can authorise the final `spend()` transaction.
+- The contract is the final enforcement boundary for delegate identity, lease status, expiry, allowlist, spending cap and lease balance.
+- The agent's preflight checks improve error messages but do not replace contract enforcement.
 
-## Agent wallet preparation
+## Current limitation
 
-After the read-only checks pass, create `agent/.env` from `.env.example`, then run:
-
-```sh
-npm run wallet:create
-```
-
-The generator writes a fresh private key into the local ignored `.env` file with restrictive file permissions and prints only the public wallet address. It refuses to overwrite an existing configured key. Do not run this on a shared or untrusted computer. Do not send the private key to anyone.
-
-Creating the wallet does not fund it, connect it to a lease, or send a transaction.
-
-## Restricted payment capability
-
-`src/payment.ts` contains the only transaction-writing capability in this package. Before signing, it checks the Arc chain ID, verifies that the configured agent wallet is the lease delegate, checks lease existence/revocation/expiry, enforces the recipient allowlist when enabled, checks the live remaining allowance, and simulates the contract call. It then submits only AgentPay `spend()` and waits for the receipt.
-
-`src/approve-payment.ts` is a separate interactive operator interface. It displays the exact lease, recipient and amount, then requires the operator to type `SEND` before it calls the payment function. This is an explicit human approval step for the current manual test stage. Do not expose the raw payment function directly to a language model; any future AI integration must route requests through a separately designed approval boundary. The function has not been executed against a funded lease.
-
-## Next milestone
-
-Run the automated TypeScript and read-only network checks. Then securely create the delegate wallet locally, register its public address in a new Orvynn lease, and test a tiny payment only after the operator reviews and confirms the transaction.
+This package currently prepares and validates payment intents; it does not yet include an LLM or autonomous task planner. AI-driven payment proposals are a separate integration milestone. Never describe the current flow as autonomous agent signing.
