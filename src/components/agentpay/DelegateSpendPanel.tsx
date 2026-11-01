@@ -70,7 +70,7 @@ export function DelegateSpendPanel() {
     <Card>
       <CardHeader
         title="Agent payment requests"
-        description="An agent proposes the recipient, amount and reason. Orvynn checks the assigned lease, then your delegate wallet must explicitly approve the transaction."
+        description="Review a payment request from an agent. Orvynn checks the assigned lease, then your delegate wallet must explicitly approve the transaction."
       />
       {source.state !== 'ready' ? (
         <Notice tone={source.state === 'error' ? 'danger' : 'info'} title={source.state === 'missing-address' ? 'Contract address not configured' : source.state === 'unsupported-network' ? 'Unsupported network' : source.state === 'disconnected' ? 'Wallet not connected' : 'Loading assigned leases'}>
@@ -82,7 +82,7 @@ export function DelegateSpendPanel() {
         </Notice>
       ) : (
         <div className="space-y-4">
-          <div className="rounded-control border border-line bg-surface-subtle p-3 sm:p-4">
+          <div className="rounded-control border border-line bg-brand-mist p-3 sm:p-4">
             <p className="text-overline uppercase text-ink-soft">How the approval works</p>
             <ol className="mt-2 grid gap-2 text-support text-ink sm:grid-cols-3">
               <li><span className="font-semibold text-brand-blue">01</span> Agent submits a request</li>
@@ -90,6 +90,7 @@ export function DelegateSpendPanel() {
               <li><span className="font-semibold text-brand-blue">03</span> Delegate approves in wallet</li>
             </ol>
           </div>
+          <p className="text-support text-ink-soft">This request composer demonstrates the delegate approval path. An external AI agent can submit the same structured request through the Orvynn Agent API.</p>
           <Field label="Assigned lease">
             {(props) => <Select {...props} value={selected?.id ?? ''} onChange={(event) => setLeaseId(event.target.value)}>
               {activeLeases.map((lease) => <option key={lease.id} value={lease.id}>Lease {lease.id} · {formatUsdc(lease.cap)} USDC cap · owner {shortAddress(lease.owner)}</option>)}
@@ -136,7 +137,7 @@ export function DelegateSpendPanel() {
             </>
           ) : (
             <>
-              <div className="rounded-control border border-line bg-surface-subtle p-4">
+              <div className="rounded-control border border-line bg-brand-mist p-4">
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-support text-ink-soft">Requested payment</span>
                   <StatusBadge status="active" />
