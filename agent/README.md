@@ -40,9 +40,9 @@ Creating the wallet does not fund it, connect it to a lease, or send a transacti
 
 ## Restricted payment capability
 
-`src/payment.ts` exports `sendLeasePayment()`. It is the only transaction-writing capability in this package. Before signing, it checks the Arc chain ID, verifies that the configured agent wallet is the lease delegate, checks lease existence/revocation/expiry, enforces the recipient allowlist when enabled, checks the live remaining allowance, and simulates the contract call. It then submits only AgentPay `spend()` and waits for the receipt.
+`src/payment.ts` contains the only transaction-writing capability in this package. Before signing, it checks the Arc chain ID, verifies that the configured agent wallet is the lease delegate, checks lease existence/revocation/expiry, enforces the recipient allowlist when enabled, checks the live remaining allowance, and simulates the contract call. It then submits only AgentPay `spend()` and waits for the receipt.
 
-Every call must include `confirmed: true`. This is an operator confirmation gate, not a substitute for the contract's on-chain protections. Do not connect an LLM to this function until a separate approval flow is designed and tested. The function has not been executed against a funded lease.
+`src/approve-payment.ts` is a separate interactive operator interface. It displays the exact lease, recipient and amount, then requires the operator to type `SEND` before it calls the payment function. This is an explicit human approval step for the current manual test stage. Do not expose the raw payment function directly to a language model; any future AI integration must route requests through a separately designed approval boundary. The function has not been executed against a funded lease.
 
 ## Next milestone
 
