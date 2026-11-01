@@ -1,41 +1,76 @@
-# Orvynn Minimal Agent
+# Orvynn Agent API
 
-A restricted, read-only payment-request service for Orvynn AgentPay on Arc Mainnet.
+A restricted Arc Mainnet payment-request service for Orvynn AgentPay. It gives an AI agent a narrow capability: ask Orvynn whether a proposed lease payment is valid and receive a structured intent for the delegate wallet to review.
 
-## Current architecture
+## Flow
 
-The agent does **not** hold a wallet private key and cannot sign or submit transactions.
+1. An AI agent decides that a payment is needed and submits a structured request.
+2. Orvynn reads the live lease and remaining allowance from Arc Mainnet.
+3. Orvynn checks lease existence, delegate identity, revocation, expiry, allowlist, deposited balance and remaining allowance.
+4. Orvynn simulates the exact `spend()` call.
+5. If valid, the API returns a payment intent marked `ready_for_delegate_approval`.
+6. The connected delegate wallet must separately review and sign the transaction. The smart contract enforces the rules again on-chain.
 
-1. An agent or user proposes a payment: lease ID, delegate wallet, recipient and amount.
-2. The agent reads the live AgentPay lease from Arc.
-3. It checks delegate identity, lease existence, revocation, expiry, recipient allowlist, deposited balance and remaining allowance.
-4. It simulates the exact `spend()` call. Simulation is read-only.
-5. It returns a structured payment intent.
-6. The connected delegate wallet reviews and signs the transaction in Orvynn. The smart contract enforces the rules again on-chain.
+**The API never signs or submits a transaction.** It has no private key and cannot move funds.
 
-This is the phone-first, non-custodial design. The agent can prepare a request, but it cannot move funds. A future AI model can call this narrow preparation capability; the wallet confirmation remains a separate approval boundary.
-
-## Configuration
-
-Copy `.env.example` to `.env` if you need to override the public Arc RPC or contract addresses. No private key or wallet secret is required.
-
-## Run
+## Run locally
 
 ```sh
 npm install
 npm run typecheck
-npm run dev
+npm test
+npm run api
 ```
 
-## Security boundaries
+The API listens on `127.0.0.1:8787` by default.
 
-- No private key generation, storage, import or signing in this package.
-- No general-purpose USDC transfer capability.
-- No owner functions such as `createLease`, `deposit`, `setAllowlist`, `revoke` or `withdraw`.
-- Only the connected delegate wallet can authorise the final `spend()` transaction.
-- The contract is the final enforcement boundary for delegate identity, lease status, expiry, allowlist, spending cap and lease balance.
-- The agent's preflight checks improve error messages but do not replace contract enforcement.
+- `GET /health`
+- `POST /v1/payment-requests/prepare`
 
-## Current limitation
+Example request:
 
-This package currently prepares and validates payment intents; it does not yet include an LLM or autonomous task planner. AI-driven payment proposals are a separate integration milestone. Never describe the current flow as autonomous agent signing.
+```json
+{
+  "leaseId": "12",
+  "delegate": "0x359db9b8af6e50b070cd73f4af91bbdf84ba81af",
+  "recipient": "0x2222222222222222222222222222222222222222",
+  "amountUsdc": "2.5",
+  "purpose": "Pay for completed work"
+}
+```
+
+Example successful response shape:
+
+```json
+{
+  "status": "ready_for_delegate_approval",
+  "purpose": "Pay for completed work",
+  "payment": {
+    "leaseId": "12",
+    "delegate": "0x...",
+    "recipient": "0x...",
+    "amountUsdc": "2.5",
+    "amountBaseUnits": "2500000",
+    "remainingAllowanceUsdc": "20",
+    "contract": "0x...",
+    "chainId": 5042,
+    "requiresDelegateWalletConfirmation": true
+  },
+  "execution": {
+    "submitted": false,
+    "signed": false,
+    "requiresDelegateWalletConfirmation": true
+  }
+}
+```
+
+An invalid or disallowed payment returns HTTP 422 with `status: "rejected"` and a reason.
+
+## Production safety
+
+- Set a strong `AGENT_API_TOKEN` before exposing the service. Requests must send `Authorization: Bearer <token>`.
+- The service refuses payment-preparation requests in production if no token is configured.
+- Put the API behind HTTPS and platform-level rate limiting before public deployment.
+- Never add a wallet private key to this service.
+- No general-purpose token transfer, lease creation, deposit, revoke or withdrawal methods are exposed.
+- The API is a payment preflight and intent service, not an LLM. An external AI agent can call it as a narrowly scoped tool after deciding what payment to request.
