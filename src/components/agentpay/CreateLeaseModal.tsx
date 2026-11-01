@@ -82,7 +82,7 @@ export function CreateLeaseModal({ open, onClose, onCreated }: {
         <Button onClick={() => void submit()} loading={busy} disabled={tx.state !== 'ready'}>Create lease</Button>
       </>}>
       <div className="space-y-4">
-        {tx.state !== 'ready' && <Notice tone="warning" title="Transactions unavailable">{tx.reason || 'Connect a wallet and configure a deployed AgentPay address.'}</Notice>}
+        {tx.state !== 'ready' && <Notice tone="warning" title="Transactions unavailable">{tx.reason || 'Connect a wallet and configure the deployed Orvynn contract address.'}</Notice>}
         <Field label="Agent wallet address">
           {(props) => <Input {...props} value={delegate} onChange={(e) => setDelegate(e.target.value)} placeholder="0x…" spellCheck={false} autoCapitalize="none" />}
         </Field>

@@ -92,7 +92,7 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: E
       client.getBlock({ blockTag: "latest" }),
       client.readContract({ address: contract, abi: agentPayAbi, functionName: "USDC" })
     ]);
-    if (configuredUsdc.toLowerCase() !== usdc.toLowerCase()) throw new Error("Configured USDC address does not match the token configured in the deployed AgentPay contract.");
+    if (configuredUsdc.toLowerCase() !== usdc.toLowerCase()) throw new Error("Configured USDC address does not match the token configured in the deployed Orvynn contract (AgentPay).");
     const [owner, delegate, , , expiry, , , , balance, allowlistEnabled, revoked] = lease;
     const recipientAllowed = allowlistEnabled
       ? await client.readContract({ address: contract, abi: agentPayAbi, functionName: "allowedRecipients", args: [payment.leaseId, payment.recipient] })

@@ -1,6 +1,6 @@
 # Connect an AI agent to Orvynn
 
-Orvynn exposes one narrow capability for an AI agent: prepare a proposed payment against a specific AgentPay lease. The agent may decide *when* a payment is appropriate, but Orvynn decides whether the request is allowed by reading Arc Mainnet state and simulating the exact contract call.
+Orvynn exposes one narrow capability for an AI agent: prepare a proposed payment against a specific Orvynn lease. The agent may decide *when* a payment is appropriate, but Orvynn decides whether the request is allowed by reading Arc Mainnet state and simulating the exact contract call.
 
 ## Tool definition
 
@@ -82,4 +82,4 @@ Use instructions like these in the agent runtime:
 
 ## Trust boundary
 
-The API is a payment preflight tool, not an LLM or wallet. The AI runtime is responsible for interpreting the task and proposing payment details. Orvynn checks those details against live contract state. The delegate wallet is responsible for explicit signing. The AgentPay contract remains the final enforcement boundary.
+The API is a payment preflight tool, not an LLM or wallet. The AI runtime is responsible for interpreting the task and proposing payment details. Orvynn checks those details against live contract state. The delegate wallet is responsible for explicit signing. The Orvynn smart contract (AgentPay) remains the final enforcement boundary.

@@ -1,6 +1,6 @@
 # Orvynn
 
-Project guidance for Orvynn, a self-custody USDC spending-lease application for AI-agent delegates on Arc. The on-chain contract is named AgentPay.
+Project guidance for Orvynn, a self-custody USDC spending-lease application for AI-agent delegates on Arc. The on-chain smart contract is named AgentPay in the code; in all user-facing text call it the Orvynn smart contract.
 
 ## Product
 
@@ -22,7 +22,7 @@ The frontend supports Arc Mainnet and Arc Testnet only. Do not add Ethereum as a
 - Contracts: Solidity, OpenZeppelin, Foundry.
 - Frontend: React, Vite, TypeScript, Tailwind CSS, wagmi, viem, TanStack Query.
 - Wallet actions are submitted through the connected wallet and require explicit wallet confirmation.
-- USDC approval and AgentPay funding are separate transactions. Never silently chain an approval and a deposit.
+- USDC approval and lease funding are separate transactions. Never silently chain an approval and a deposit.
 - Contract reads require a configured deployment address for the selected network. Do not invent or hardcode deployment addresses.
 
 ## Key files
@@ -54,7 +54,7 @@ bun test
 ## Deployment and security rules
 
 - Do not claim that Orvynn is deployed unless the address and transaction are verified on the correct Arc explorer.
-- The verified Arc Mainnet AgentPay deployment is `0xA549B60313A86288d46323e5723AAa4c0fAA6363`, created by transaction `0x7714b5ae3b3208e80c108a10866b52083d0304391d4d0984cea54928f8021ac7` on chain ID `5042`.
+- The verified Arc Mainnet Orvynn contract (AgentPay) deployment is `0xA549B60313A86288d46323e5723AAa4c0fAA6363`, created by transaction `0x7714b5ae3b3208e80c108a10866b52083d0304391d4d0984cea54928f8021ac7` on chain ID `5042`.
 - Follow `docs/deploy-agentpay-mainnet.md` for the Ledger-based Arc Foundry deployment process. Do not use obsolete private-key deployment instructions.
 - Never request, display, commit, or transmit private keys, seed phrases, recovery phrases, or `.env` contents.
 - Never broadcast a deployment or submit a wallet transaction without the user's explicit instruction and a final network/transaction review.

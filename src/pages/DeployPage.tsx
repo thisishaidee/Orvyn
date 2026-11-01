@@ -211,7 +211,7 @@ export function DeployPage() {
           throw new Error(`Deployment transaction sender is ${deploymentTx.from}, expected ${EXPECTED_DEPLOYER}.`)
         }
         if (deploymentTx.input.toLowerCase() !== CREATION_BYTECODE.toLowerCase()) {
-          throw new Error('Deployment transaction input does not match the reviewed AgentPay creation bytecode.')
+          throw new Error('Deployment transaction input does not match the reviewed Orvynn contract (AgentPay) creation bytecode.')
         }
 
         const runtime = await mainnetClient.getBytecode({ address: contractAddress })
@@ -405,7 +405,7 @@ export function DeployPage() {
       <Card>
         <CardHeader
           title="3. Review and confirm"
-          description="One creation transaction with the compiled AgentPay bytecode. No constructor arguments: the USDC address is fixed in the contract."
+          description="One creation transaction with the compiled Orvynn contract (AgentPay) bytecode. No constructor arguments: the USDC address is fixed in the contract."
         />
         {phase === 'deployed' && deployedAddress ? (
           <div className="space-y-3">

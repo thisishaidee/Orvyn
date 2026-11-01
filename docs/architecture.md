@@ -16,7 +16,7 @@ flowchart TD
     READ --> RPC[Arc RPC]
     WRITE --> SIGN[Wallet signs transaction]
     SIGN --> RPC
-    RPC --> AGENTPAY[AgentPay smart contract]
+    RPC --> AGENTPAY[Orvynn smart contract - AgentPay]
     AGENTPAY <--> USDC[USDC contract]
     AGENTPAY --> EVENTS[Lease and spend events]
     EVENTS --> READ
@@ -30,8 +30,8 @@ flowchart TD
 - **Delegate wallet:** submits spend transactions within the lease's on-chain permissions and available balance.
 - **Orvynn frontend:** presents lease, wallet and activity information; prepares transactions and requests wallet signatures.
 - **Read layer:** reads contract state, USDC balances and contract events from Arc RPC.
-- **Transaction layer:** submits wallet-signed calls to AgentPay and waits for confirmed receipts before refreshing the interface.
-- **AgentPay:** enforces delegate identity, spending caps, lease duration, recipient restrictions and owner-only controls.
+- **Transaction layer:** submits wallet-signed calls to the Orvynn contract and waits for confirmed receipts before refreshing the interface.
+- **Orvynn smart contract (named AgentPay):** enforces delegate identity, spending caps, lease duration, recipient restrictions and owner-only controls.
 - **USDC:** the token held and transferred by the lease contract.
 
 ## Important transaction boundaries
@@ -49,7 +49,7 @@ flowchart TD
 | Arc Mainnet | 5042 |
 | Arc Testnet | 5042002 |
 
-The configured USDC token uses 6 decimals. The deployed Arc Mainnet AgentPay contract is `0xA549B60313A86288d46323e5723AAa4c0fAA6363`.
+The configured USDC token uses 6 decimals. The deployed Arc Mainnet Orvynn contract (AgentPay) is `0xA549B60313A86288d46323e5723AAa4c0fAA6363`.
 
 ## Security scope
 

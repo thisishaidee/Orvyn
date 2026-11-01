@@ -14,16 +14,16 @@ async function main() {
     publicClient.readContract({ address: agentPayAddress, abi: agentPayAbi, functionName: "USDC" })
   ]);
 
-  if (!agentPayCode || agentPayCode === "0x") throw new Error("No contract code found at AgentPay address.");
+  if (!agentPayCode || agentPayCode === "0x") throw new Error("No contract code found at the Orvynn contract (AgentPay) address.");
   if (!usdcCode || usdcCode === "0x") throw new Error("No contract code found at Arc USDC address.");
   if (usdcDecimals !== 6) throw new Error(`Unexpected USDC decimals: ${usdcDecimals}; expected 6.`);
   if (configuredUsdc.toLowerCase() !== usdcAddress.toLowerCase()) {
-    throw new Error(`Configured USDC address ${usdcAddress} does not match the token hardcoded in AgentPay (${configuredUsdc}).`);
+    throw new Error(`Configured USDC address ${usdcAddress} does not match the token hardcoded in the Orvynn contract (AgentPay) (${configuredUsdc}).`);
   }
 
   console.log("Arc connection verified.");
   console.log(`Chain ID: ${chainId}`);
-  console.log(`AgentPay: ${agentPayAddress}`);
+  console.log(`Orvynn contract (AgentPay): ${agentPayAddress}`);
   console.log(`Arc USDC: ${usdcAddress} (6 decimals)`);
   console.log("Mode: read-only. No wallet key loaded; no transaction sent.");
 }
