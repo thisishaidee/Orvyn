@@ -6,6 +6,7 @@ import { parseAbi } from "viem";
  * Owner-only functions such as createLease, revoke and withdraw are excluded.
  */
 export const agentPayAbi = parseAbi([
+  "function USDC() view returns (address)",
   "function spend(uint256 leaseId, address recipient, uint256 amount)",
   "function remainingAllowance(uint256 leaseId) view returns (uint256)",
   "function leases(uint256 leaseId) view returns (address owner, address delegate, uint256 cap, uint256 periodSeconds, uint256 expiry, uint256 windowStart, uint256 lastWindowIndex, uint256 spentThisWindow, uint256 balance, bool allowlistEnabled, bool revoked)",
