@@ -1,5 +1,5 @@
-import { type ReactNode } from 'react'
-import { type LucideIcon } from 'lucide-react'
+import { useState, type ReactNode } from 'react'
+import { ArrowUpRight, Github, Menu, X, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { BRAND } from '@/lib/brand'
 
@@ -73,7 +73,12 @@ export interface AppShellProps {
 }
 
 export function AppShell({ nav, activeId, onNavigate, sidebarFooter, topBarActions, children }: AppShellProps) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const actions = (tone: 'dark' | 'light') => (typeof topBarActions === 'function' ? topBarActions(tone) : topBarActions)
+  const handleNavigate = (id: string) => {
+    onNavigate(id)
+    setMobileMenuOpen(false)
+  }
 
   return (
     <div className="min-h-dvh">
@@ -97,35 +102,68 @@ export function AppShell({ nav, activeId, onNavigate, sidebarFooter, topBarActio
           {sidebarFooter && <div className="hidden shrink-0 border-t border-white/10 p-3 lg:block">{sidebarFooter}</div>}
         </div>
       </aside>
-      <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-white/10 bg-brand-navy bg-navy-gradient px-4 text-white md:hidden">
-        <BrandMark className="min-w-0 text-white" />{topBarActions && <div className="shrink-0">{actions('dark')}</div>}
+
+      <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-white/10 bg-brand-navy bg-navy-gradient px-4 text-white md:hidden">
+        <BrandMark className="min-w-0 text-white" />
+        <div className="flex shrink-0 items-center gap-2">
+          {topBarActions && <div>{actions('dark')}</div>}
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-navigation-drawer"
+            className="focus-ring-dark inline-flex size-10 items-center justify-center rounded-control text-white transition-colors hover:bg-white/10"
+          >
+            {mobileMenuOpen ? <X className="size-6" aria-hidden /> : <Menu className="size-6" aria-hidden />}
+          </button>
+        </div>
       </header>
+
+      {mobileMenuOpen && (
+        <button
+          type="button"
+          aria-label="Close navigation menu"
+          onClick={() => setMobileMenuOpen(false)}
+          className="fixed inset-14 z-40 bg-[#101D35]/45 backdrop-blur-[2px] md:hidden"
+        />
+      )}
+      <aside
+        id="mobile-navigation-drawer"
+        aria-label="Mobile navigation"
+        aria-hidden={!mobileMenuOpen}
+        className={cn(
+          'fixed inset-y-14 left-0 z-50 w-[min(18rem,86vw)] border-r border-white/10 bg-brand-navy bg-navy-gradient text-white shadow-2xl transition-transform duration-300 ease-out md:hidden',
+          mobileMenuOpen ? 'translate-x-0' : '-translate-x-full pointer-events-none',
+        )}
+      >
+        <SidebarContent nav={nav} activeId={activeId} onNavigate={handleNavigate} footer={sidebarFooter} />
+      </aside>
+
       <div className="md:pl-[var(--ap-sidebar-rail)] lg:pl-[var(--ap-sidebar-wide)] xl:pl-[var(--ap-sidebar-wider)]">
         <main id="main" className="page-wash min-h-dvh bg-canvas">
-          <div className="mx-auto w-full max-w-[1200px] px-4 pb-8 pt-6 pl-[calc(1rem+4.25rem)] sm:px-6 sm:pl-[calc(1.5rem+4.25rem)] md:px-8 md:pb-24 md:pl-8 md:pt-8 xl:max-w-[1360px] xl:px-10">
+          <div className="mx-auto w-full max-w-[1200px] px-4 pb-8 pt-6 sm:px-6 md:px-8 md:pb-24 md:pt-8 xl:max-w-[1360px] xl:px-10">
             {topBarActions && <div className="mb-6 hidden justify-end md:flex">{actions('light')}</div>}
             {children}
-            <footer className="mt-10 border-t border-line px-1 py-6 text-support text-ink-soft sm:px-2"><p>{BRAND.name} — {BRAND.tagline}</p><p className="mt-1">Built for Arc. USDC spending limits enforced by smart contract.<a className="ml-2 underline hover:text-ink" href={BRAND.repoUrl} target="_blank" rel="noreferrer">Source</a></p></footer>
+            <footer className="relative mt-14 overflow-hidden rounded-[24px] bg-[#101D35] text-white shadow-[0_18px_48px_rgba(23,41,75,.12)]">
+              <div className="pointer-events-none absolute inset-0 opacity-20"><img src="/images/orvynn-particle-hero.svg" alt="" className="h-full w-full object-cover object-center" /></div>
+              <div className="pointer-events-none absolute -right-16 -top-24 size-64 rounded-full border border-white/10" />
+              <div className="relative flex flex-col gap-7 p-5 sm:p-7 lg:flex-row lg:items-end lg:justify-between">
+                <div className="max-w-lg">
+                  <BrandMark className="text-white" />
+                  <p className="mt-5 max-w-md text-sm leading-6 text-white/65">Spending limits for AI agents, enforced by smart contract.</p>
+                  <span className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[10px] font-medium uppercase tracking-[.14em] text-[#BFD5F0]"><span className="size-1.5 rounded-full bg-[#8FB9EB]" /> Built for Arc · USDC</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <a href={BRAND.repoUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center gap-2 rounded-full border border-white/15 px-4 text-xs font-medium text-white/85 transition hover:border-white/30 hover:bg-white/10 hover:text-white"><Github className="size-4" /> Source code <ArrowUpRight className="size-3.5" /></a>
+                  <a href="https://arc.network" target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center gap-2 rounded-full bg-white px-4 text-xs font-semibold text-brand-navy transition hover:bg-[#EAF2FC]">Explore Arc <ArrowUpRight className="size-3.5" /></a>
+                </div>
+              </div>
+              <div className="relative flex flex-col gap-1 border-t border-white/10 px-5 py-3 text-[11px] text-white/45 sm:flex-row sm:items-center sm:justify-between sm:px-7"><span>{BRAND.name} · {BRAND.tagline}</span><span>USDC spending permissions on Arc.</span></div>
+            </footer>
           </div>
         </main>
       </div>
-      <nav aria-label="Primary navigation" className="fixed inset-y-14 left-0 z-40 w-[4.25rem] border-r border-[#DCE6F2] bg-white/95 shadow-[8px_0_24px_rgba(23,41,75,0.06)] backdrop-blur-xl pb-[env(safe-area-inset-bottom)] md:hidden">
-        <ul className="flex h-full flex-col items-stretch gap-1 overflow-y-auto px-1.5 py-3">
-          {nav.map(({ id, label, icon: Icon }) => {
-            const active = id === activeId
-            return (
-              <li key={id} className="min-w-0">
-                <button type="button" onClick={() => onNavigate(id)} aria-current={active ? 'page' : undefined} aria-label={label} title={label}
-                  className={cn('relative flex min-h-[4.25rem] w-full flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 text-[9px] font-semibold leading-tight transition-colors active:scale-[.97]', active ? 'bg-[#EAF2FC] text-brand-navy' : 'text-ink-mute hover:bg-[#F5F8FC] hover:text-brand-navy')}>
-                  {active && <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-brand-blue" aria-hidden />}
-                  <Icon className={cn('size-5 shrink-0 transition-transform', active && 'scale-105 stroke-[2.4] text-brand-blue')} aria-hidden />
-                  <span className="max-w-full text-center">{label}</span>
-                </button>
-              </li>
-            )
-          })}
-        </ul>
-      </nav>
     </div>
   )
 }
