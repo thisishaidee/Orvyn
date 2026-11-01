@@ -230,6 +230,10 @@ export function useOwnerLeases(): DataSource<Lease> {
   const query = useQuery({
     queryKey: ['agentpay', 'leases', gate.ok ? gate.chainId : 0, gate.ok ? gate.contract : 'none', gate.ok ? gate.address : 'none'],
     enabled: gate.ok,
+    staleTime: 60_000,
+    gcTime: 10 * 60_000,
+    retry: 1,
+    refetchOnWindowFocus: false,
     queryFn: () => {
       if (!gate.ok) return []
       return discoverLeases(gate.client, gate.contract, { owner: gate.address }, eventStartBlock(gate.chainId))
