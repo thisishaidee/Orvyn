@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Check, X, Wallet, Network, SlidersHorizontal, ShieldCheck, Info } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { useAccount, useChains } from 'wagmi'
 import { Badge, Card, CardHeader, PageHeader } from '@/components/ui'
 import { InfoList, InfoRow } from '@/components/agentpay/Notices'
@@ -9,7 +10,7 @@ import { shortAddress } from '@/lib/agentpay'
 import { useNetworkInfo } from '@/lib/wallet'
 import { getAgentPayAddress } from '@/lib/agentpay-address'
 
-function Section({ title, description, icon: Icon, children }: { title: string; description?: string; icon: typeof Wallet; children: ReactNode }) {
+function Section({ title, description, icon: Icon, children }: { title: string; description?: string; icon: LucideIcon; children: ReactNode }) {
   return (
     <Card className="overflow-hidden">
       <div className="mb-4 flex items-start gap-3">
