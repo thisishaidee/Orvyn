@@ -256,20 +256,20 @@ async function discoverActivity(
   const leaseIds = leases.map((l) => BigInt(l.id))
   const byId = new Map(leases.map((l) => [l.id, l]))
 
-  const [created, deposited, withdrawn, spent, revoked, allowlist] = await Promise.all([
-    getLogsChunked(client, { address: contract, event: eventAbi('LeaseCreated') as never, args: { owner }, fromBlock }),
-    getLogsChunked(client, { address: contract, event: eventAbi('Deposited') as never, args: { owner }, fromBlock }),
-    getLogsChunked(client, { address: contract, event: eventAbi('Withdrawn') as never, args: { owner }, fromBlock }),
-    leaseIds.length
-      ? getLogsChunked(client, { address: contract, event: eventAbi('Spent') as never, fromBlock })
-      : Promise.resolve([]),
-    leaseIds.length
-      ? getLogsChunked(client, { address: contract, event: eventAbi('Revoked') as never, fromBlock })
-      : Promise.resolve([]),
-    leaseIds.length
-      ? getLogsChunked(client, { address: contract, event: eventAbi('AllowlistUpdated') as never, fromBlock })
-      : Promise.resolve([]),
-  ])
+  // Keep these scans sequential: parallel full-history eth_getLogs calls can
+  // trigger Arc RPC rate limits even when each individual range is small.
+  const created = await getLogsChunked(client, { address: contract, event: eventAbi('LeaseCreated') as never, args: { owner }, fromBlock })
+  const deposited = await getLogsChunked(client, { address: contract, event: eventAbi('Deposited') as never, args: { owner }, fromBlock })
+  const withdrawn = await getLogsChunked(client, { address: contract, event: eventAbi('Withdrawn') as never, args: { owner }, fromBlock })
+  const spent = leaseIds.length
+    ? await getLogsChunked(client, { address: contract, event: eventAbi('Spent') as never, fromBlock })
+    : []
+  const revoked = leaseIds.length
+    ? await getLogsChunked(client, { address: contract, event: eventAbi('Revoked') as never, fromBlock })
+    : []
+  const allowlist = leaseIds.length
+    ? await getLogsChunked(client, { address: contract, event: eventAbi('AllowlistUpdated') as never, fromBlock })
+    : []
 
   const owned = new Set(leaseIds.map((id) => id.toString()))
   const relevant = [...created, ...deposited, ...withdrawn, ...spent, ...revoked, ...allowlist].filter((log) => {
