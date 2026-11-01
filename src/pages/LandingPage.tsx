@@ -1,4 +1,4 @@
-import { ArrowRight, Check, Clock3, LockKeyhole, ShieldCheck, Wallet } from 'lucide-react'
+import { ArrowRight, Check, Clock3, LockKeyhole, Wallet } from 'lucide-react'
 import { BRAND } from '@/lib/brand'
 
 const steps = [
@@ -12,6 +12,15 @@ const controls = [
   { icon: Check, title: 'Recipient restrictions', text: 'Optionally limit payments to wallet addresses you approve.' },
   { icon: Clock3, title: 'Owner control', text: 'Revoke a lease to stop future payments. Withdrawals are a separate action.' },
 ]
+
+function OrvynnMark({ className }: { className?: string }) {
+  return <svg viewBox="0 0 64 64" fill="currentColor" aria-hidden="true" className={className}>
+    <path d="M30.5 30.5V6.5A24 24 0 0 0 6.5 30.5Z" />
+    <path d="M37.5 26.5H61.5A24 24 0 0 0 37.5 2.5Z" />
+    <path d="M33.5 33.5V57.5A24 24 0 0 0 57.5 33.5Z" />
+    <path d="M30.5 33.5H6.5A24 24 0 0 0 30.5 57.5Z" />
+  </svg>
+}
 
 export function LandingPage({ onLaunch }: { onLaunch: () => void }) {
   return (
@@ -110,7 +119,7 @@ export function LandingPage({ onLaunch }: { onLaunch: () => void }) {
 
       <footer className="border-t border-line bg-surface">
         <div className="mx-auto flex max-w-7xl flex-col gap-6 px-5 py-8 sm:px-8 md:flex-row md:items-center md:justify-between lg:px-10">
-          <div className="flex items-center gap-3"><span className="flex size-9 items-center justify-center rounded-lg bg-brand-gradient text-white"><ShieldCheck className="size-5" /></span><div><p className="font-semibold text-brand-navy">{BRAND.name}</p><p className="text-xs text-ink-mute">{BRAND.tagline}</p></div></div>
+          <div className="flex items-center gap-3"><span className="flex size-9 items-center justify-center rounded-lg bg-white text-brand-navy"><OrvynnMark className="size-7" /></span><div><p className="font-semibold text-brand-navy">{BRAND.name}</p><p className="text-xs text-ink-mute">{BRAND.tagline}</p></div></div>
           <nav aria-label="Footer navigation" className="flex flex-wrap gap-x-6 gap-y-3 text-sm text-ink-soft"><a href="#how-it-works" className="hover:text-ink">How it works</a><a href="/?page=overview" className="hover:text-ink">Open app</a><a href={BRAND.repoUrl} target="_blank" rel="noreferrer" className="hover:text-ink">GitHub source</a></nav>
           <p className="text-xs text-ink-mute">Built for Arc · USDC on-chain spending permissions</p>
         </div>
