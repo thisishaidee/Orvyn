@@ -70,11 +70,11 @@ export function LandingPage({ onLaunch }: { onLaunch: () => void }) {
               <div className="relative bg-gradient-to-b from-[#101820] to-[#111820] px-5 pb-6 pt-1 sm:px-7 sm:pb-7">
                 <div className="flex items-start justify-between gap-3">
                   <div><p className="text-[10px] font-medium uppercase tracking-[.16em] text-white/55">LEASE BALANCE</p><p className="mt-2 text-3xl font-light tracking-tight sm:text-4xl">12,450.00 <span className="text-base text-white/65">USDC</span></p></div>
-                  <span className="mt-1 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-[10px] text-emerald-200">Illustrative</span>
+                  <span className="mt-1 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-[10px] font-medium text-emerald-200">Example data</span>
                 </div>
                 <div className="mt-5 flex items-center justify-between gap-4 text-xs text-white/65"><span>Monthly spending limit</span><span>25,000 USDC</span></div>
                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full w-1/2 rounded-full bg-gradient-to-r from-[#5C9FE9] to-[#9CCBFA]" /></div>
-                <div className="mt-2 flex justify-between text-[11px] text-white/45"><span>50% allocated</span><span>50% available</span></div>
+                <div className="mt-2 flex justify-between text-[11px] text-white/45"><span>50% allocated</span><span>50% available</span></div>\n                <p className="mt-4 border-t border-white/10 pt-3 text-[11px] leading-5 text-white/45">Sample figures for illustration only. This is not live wallet or lease data.</p>
               </div>
             </article>
           </div>
